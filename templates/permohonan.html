@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajukan Permohonan - {{ kategori | capitalize }}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { width: 260px; background-color: #0d4a2b; min-height: 100vh; position: fixed; color: white; z-index: 1000; overflow-y: auto; }
+        .sidebar .nav-link { color: #b0d8c2; margin-bottom: 3px; border-radius: 5px; font-size: 14px; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #145c35; color: white; }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .btn-success-custom { background-color: #0d4a2b; border-color: #0d4a2b; color: white; }
+        .btn-success-custom:hover { background-color: #145c35; border-color: #145c35; color: white; }
+        .preview-box { position: relative; width: 90px; height: 90px; }
+        .preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <div class="d-flex align-items-center mb-4 px-2 pt-2">
+                <i class="bi bi-truck-flatbed fs-4 me-2 text-white"></i>
+                <div>
+                    <h6 class="fw-bold mb-0 text-white">PERIZINAN</h6>
+                    <small style="color: #a3e4d7;">ALAT BERAT</small>
+                </div>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a href="{{ url_for('dashboard_page') }}" class="nav-link py-2 px-3"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="#" class="nav-link active py-2 px-3"><i class="bi bi-file-earmark-plus me-2"></i> Ajukan Permohonan</a></li>
+                <li class="nav-item"><a href="{{ url_for('riwayat_page') }}" class="nav-link py-2 px-3"><i class="bi bi-clock-history me-2"></i> Riwayat</a></li>
+            </ul>
+        </div>
+        <a href="{{ url_for('logout') }}" class="nav-link text-danger py-2 px-3"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
+            <h4 class="fw-bold mb-0 text-dark text-capitalize">Ajukan Permohonan - {{ kategori }}</h4>
+            <a href="{{ url_for('dashboard_page') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Kembali</a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <form action="{{ url_for('proses_permohonan', kategori=kategori) }}" method="POST" enctype="multipart/form-data">
+                
+                <h5 class="fw-bold mb-3 text-success"><i class="bi bi-file-earmark-text me-2"></i>Formulir Data {{ kategori | capitalize }}</h5>
+                <hr class="mb-4">
+
+                <div class="row g-3">
+                    {% if kategori == 'sarana' %}
+                        <div class="col-md-6"><label class="form-label small fw-bold">Jenis Sarana *</label><input type="text" name="jenis_sarana" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">No. Lambung *</label><input type="text" name="no_lambung" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">No. Polisi</label><input type="text" name="no_polisi" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Merk</label><input type="text" name="merk" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Type</label><input type="text" name="type" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tahun</label><input type="number" name="tahun" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Nomer Mesin</label><input type="text" name="nomer_mesin" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Nomer Rangka</label><input type="text" name="nomer_rangka" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Nomer STNK</label><input type="text" name="nomer_stnk" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Kapasitas</label><input type="text" name="kapasitas" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Departemen / Instansi</label><input type="text" name="instansi" class="form-control"></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Catatan</label><textarea name="catatan" class="form-control" rows="2" placeholder="Tambahkan catatan jika diperlukan..."></textarea></div>
+
+                    {% elif kategori == 'prasarana' %}
+                        <div class="col-md-6"><label class="form-label small fw-bold">Jenis Prasarana *</label><input type="text" name="jenis_prasarana" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Nama Prasarana</label><input type="text" name="nama_prasarana" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tahun</label><input type="number" name="tahun" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Lokasi</label><input type="text" name="lokasi" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Koordinat</label><input type="text" name="koordinat" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Kapasitas</label><input type="text" name="kapasitas" class="form-control"></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Catatan</label><textarea name="catatan" class="form-control" rows="2" placeholder="Tambahkan catatan jika diperlukan..."></textarea></div>
+
+                    {% elif kategori == 'instalasi' %}
+                        <div class="col-md-6"><label class="form-label small fw-bold">Jenis Instalasi *</label><input type="text" name="jenis_sarana" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Lokasi Instalasi</label><input type="text" name="lokasi" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tahun Pembuatan</label><input type="number" name="tahun" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Kapasitas</label><input type="text" name="kapasitas" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">No. Sertifikat</label><input type="text" name="no_lambung" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Tanggal Berlaku</label><input type="date" name="tgl_berlaku" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Tanggal Berakhir</label><input type="date" name="tgl_berakhir" class="form-control"></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Catatan</label><textarea name="catatan" class="form-control" rows="2" placeholder="Tambahkan catatan jika diperlukan..."></textarea></div>
+
+                    {% elif kategori == 'peralatan' %}
+                        <div class="col-md-6"><label class="form-label small fw-bold">Jenis Peralatan *</label><input type="text" name="jenis_sarana" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Merk</label><input type="text" name="merk" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">No. Seri/Mesin</label><input type="text" name="no_lambung" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Tahun</label><input type="number" name="tahun" class="form-control"></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Catatan</label><textarea name="catatan" class="form-control" rows="2" placeholder="Tambahkan catatan jika diperlukan..."></textarea></div>
+                    {% endif %}
+
+                    <!-- FOTO -->
+                    <div class="col-12 mt-4">
+                        <div class="p-3 border border-2 border-dashed rounded-4 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold"><i class="bi bi-camera-fill text-success me-2"></i> Unggah Foto</label>
+                                <button type="button" id="btnTambahFoto" class="btn btn-sm btn-success"><i class="bi bi-plus-circle"></i> Tambah</button>
+                            </div>
+                            <div id="containerInputFoto" class="vstack gap-2">
+                                <div class="input-group input-group-sm item-foto">
+                                    <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
+                                    <button type="button" class="btn btn-outline-danger btnHapus" disabled><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <!-- Kotak grid pratinju foto -->
+                            <div id="previewGrid" class="d-flex flex-wrap gap-2 mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success-custom px-5 py-2 fw-bold"><i class="bi bi-send-fill me-2"></i> Kirim Permohonan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        const btnTambahFoto = document.getElementById('btnTambahFoto');
+        const containerInputFoto = document.getElementById('containerInputFoto');
+        const previewGrid = document.getElementById('previewGrid');
+
+        btnTambahFoto.addEventListener('click', () => {
+            const div = document.createElement('div');
+            div.className = 'input-group input-group-sm item-foto';
+            div.innerHTML = `<input type="file" name="foto" class="form-control file-input" accept="image/*" required>
+                             <button type="button" class="btn btn-outline-danger btnHapus"><i class="bi bi-trash"></i></button>`;
+            containerInputFoto.appendChild(div);
+            updateHapusButtons();
+        });
+
+        containerInputFoto.addEventListener('click', (e) => {
+            if (e.target.closest('.btnHapus')) {
+                e.target.closest('.item-foto').remove();
+                updateHapusButtons();
+                updatePreviews(); 
+            }
+        });
+
+        containerInputFoto.addEventListener('change', (e) => {
+            if (e.target.classList.contains('file-input')) {
+                updatePreviews();
+            }
+        });
+
+        function updateHapusButtons() {
+            const items = containerInputFoto.querySelectorAll('.item-foto');
+            items.forEach((item) => {
+                item.querySelector('.btnHapus').disabled = (items.length === 1);
+            });
+        }
+
+        function updatePreviews() {
+            previewGrid.innerHTML = '';
+            const fileInputs = containerInputFoto.querySelectorAll('.file-input');
+            
+            fileInputs.forEach((input) => {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.createElement('div');
+                        box.className = 'preview-box';
+                        box.innerHTML = `<img src="${e.target.result}" class="preview-img">`;
+                        previewGrid.appendChild(box);
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

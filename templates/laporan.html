@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan & Export - Admin Perizinan Alat Berat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8f9fa; }
+        
+        /* SIDEBAR UTAMA */
+        .sidebar { 
+            width: 260px; 
+            background-color: #0d4a2b; 
+            height: 100vh; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: 99999; 
+            overflow-y: auto;
+        }
+        
+        /* AGAR LINK BISA DIKLIK DI ATAS SEGALA ELEMEN */
+        .sidebar .nav-link { 
+            color: #b0d8c2; 
+            display: block; 
+            padding: 12px 20px;
+            text-decoration: none;
+            position: relative;
+            z-index: 100000; 
+        }
+        
+        .sidebar .nav-link:hover { background-color: #145c35; color: white; }
+        .sidebar .nav-link.active-page { background-color: #145c35; color: white; font-weight: bold; }
+        
+        /* KONTEN UTAMA */
+        .main-content { 
+            margin-left: 260px; 
+            padding: 30px; 
+            position: relative; 
+            z-index: 1; 
+        }
+
+        /* Kartu Statistik Ringkasan */
+        .card-stat { border: none; border-radius: 12px; padding: 20px; color: white; }
+        .bg-total { background-color: #0d6efd; }
+        .bg-layak { background-color: #198754; }
+        .bg-tidak-layak { background-color: #dc3545; }
+        .bg-menunggu { background-color: #fd7e14; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR ADMIN -->
+    <div class="sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <div class="d-flex align-items-center mb-4 px-2 pt-2">
+                <i class="bi bi-shield-lock-fill fs-4 me-2 text-white"></i>
+                <div>
+                    <h6 class="fw-bold mb-0 text-white">PANEL ADMIN</h6>
+                    <small style="color: #a3e4d7;">PENGELOLA</small>
+                </div>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a href="/admin" class="nav-link mb-1"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="/permohonan-masuk" class="nav-link mb-1"><i class="bi bi-file-earmark-text me-2"></i> Permohonan Masuk</a></li>
+                <li class="nav-item"><a href="/master-sarana" class="nav-link mb-1"><i class="bi bi-truck me-2"></i> Master Sarana</a></li>
+                <li class="nav-item"><a href="/master-prasarana" class="nav-link mb-1"><i class="bi bi-buildings me-2"></i> Master Prasarana</a></li>
+                <li class="nav-item"><a href="/master-instalasi" class="nav-link mb-1"><i class="bi bi-gear me-2"></i> Master Instalasi</a></li>
+                <li class="nav-item"><a href="/master-peralatan" class="nav-link mb-1"><i class="bi bi-tools me-2"></i> Master Peralatan</a></li>
+                <li class="nav-item"><a href="/laporan" class="nav-link active-page mb-1"><i class="bi bi-bar-chart-line me-2"></i> Laporan</a></li>
+            </ul>
+        </div>
+        <div>
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
+            <div>
+                <h4 class="fw-bold mb-1 text-dark">Laporan Perizinan Alat Berat</h4>
+                <p class="text-muted small mb-0">Pilih jenis laporan dan periode untuk melihat rekapitulasi data.</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Kembali</a>
+        </div>
+
+        <!-- FORM FILTER LAPORAN -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-filter me-1"></i> Filter Laporan & Periode</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Jenis Laporan</label>
+                    <select class="form-select form-select-sm">
+                        <option selected>Semua Jenis</option>
+                        <option>Sarana (Unit Bergerak)</option>
+                        <option>Prasarana</option>
+                        <option>Instalasi</option>
+                        <option>Peralatan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Periode Tanggal</label>
+                    <div class="input-group input-group-sm">
+                        <input type="date" class="form-control" value="2026-08-01">
+                        <span class="input-group-text">s/d</span>
+                        <input type="date" class="form-control" value="2026-08-31">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Status Kelayakan</label>
+                    <select class="form-select form-select-sm">
+                        <option selected>Semua Status</option>
+                        <option>Layak Digunakan</option>
+                        <option>Tidak Layak Digunakan</option>
+                        <option>Menunggu Verifikasi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 text-end">
+                <button class="btn btn-success btn-sm px-4 fw-bold"><i class="bi bi-search me-1"></i> Tampilkan</button>
+            </div>
+        </div>
+
+        <!-- RINGKASAN STATISTIK -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h6 class="fw-bold mb-3 text-dark">Ringkasan Data</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="card-stat bg-total shadow-sm text-center">
+                        <h3 class="fw-bold mb-0">{{ list_permohonan | length }}</h3>
+                        <small>Total Data</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-stat bg-layak shadow-sm text-center">
+                        <h3 class="fw-bold mb-0">
+                            {{ list_permohonan | selectattr('status', 'equalto', 'Disetujui') | list | length }}
+                        </h3>
+                        <small>Layak Digunakan</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-stat bg-tidak-layak shadow-sm text-center">
+                        <h3 class="fw-bold mb-0">0</h3>
+                        <small>Tidak Layak Digunakan</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-stat bg-menunggu shadow-sm text-center">
+                        <h3 class="fw-bold mb-0">
+                            {{ list_permohonan | selectattr('status', 'equalto', 'Pending') | list | length }}
+                        </h3>
+                        <small>Menunggu Verifikasi</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOMBOL EKSPOR LAPORAN -->
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <a href="/export-excel" class="btn btn-outline-success btn-sm fw-bold"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</a>
+                <button onclick="window.print()" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i> Export PDF</button>
+            </div>
+        </div>
+
+        <!-- TABEL DETAIL LAPORAN -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-table me-1"></i> Detail Data Permohonan Masuk</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Kode Unik</th>
+                            <th>Pemohon</th>
+                            <th>Kategori</th>
+                            <th>Jenis / Unit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if list_permohonan %}
+                            {% for item in list_permohonan %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="fw-bold text-success">{{ item.kode_unik }}</td>
+                                <td>{{ item.pemohon }}</td>
+                                <td class="text-capitalize">{{ item.kategori }}</td>
+                                <td>{{ item.jenis_sarana if item.jenis_sarana else '-' }}</td>
+                                <td>
+                                    <span class="badge {% if item.status == 'Disetujui' %}bg-success{% elif item.status == 'Pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Belum ada data laporan permohonan.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

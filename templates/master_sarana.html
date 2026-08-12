@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Sarana - Admin Perizinan Alat Berat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { width: 260px; background-color: #0d4a2b; min-height: 100vh; position: fixed; top: 0; left: 0; color: white; z-index: 9999; overflow-y: auto; }
+        .sidebar .nav-link { color: #b0d8c2; margin-bottom: 3px; border-radius: 5px; font-size: 14px; text-decoration: none; display: block; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active-page { background-color: #145c35; color: white; }
+        .sidebar .nav-link.active-page { font-weight: bold; }
+        .main-content { margin-left: 260px; padding: 30px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <div class="d-flex align-items-center mb-4 px-2 pt-2">
+                <i class="bi bi-shield-lock-fill fs-4 me-2 text-white"></i>
+                <div><h6 class="fw-bold mb-0 text-white">PANEL ADMIN</h6><small style="color: #a3e4d7;">PENGELOLA</small></div>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a href="/admin" class="nav-link py-2 px-3 mb-1"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="/permohonan-masuk" class="nav-link py-2 px-3 mb-1"><i class="bi bi-file-earmark-text me-2"></i> Permohonan Masuk</a></li>
+                <li class="nav-item"><a href="/master-sarana" class="nav-link active-page py-2 px-3 mb-1"><i class="bi bi-truck me-2"></i> Master Sarana</a></li>
+                <li class="nav-item"><a href="/master-prasarana" class="nav-link py-2 px-3 mb-1"><i class="bi bi-buildings me-2"></i> Master Prasarana</a></li>
+                <li class="nav-item"><a href="/master-instalasi" class="nav-link py-2 px-3 mb-1"><i class="bi bi-gear me-2"></i> Master Instalasi</a></li>
+                <li class="nav-item"><a href="/master-peralatan" class="nav-link py-2 px-3 mb-1"><i class="bi bi-tools me-2"></i> Master Peralatan</a></li>
+            </ul>
+        </div>
+        <div>
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger py-2 px-3"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
+            <div>
+                <h4 class="fw-bold mb-1 text-dark">Daftar Sarana</h4>
+                <p class="text-muted small mb-0">Kelola database data sarana dan unit terdaftar.</p>
+            </div>
+            <a href="#" class="btn btn-success fw-bold"><i class="bi bi-plus-lg me-2"></i>Tambah Sarana</a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Jenis Sarana</th>
+                            <th>No. Lambung</th>
+                            <th>Merk / Type</th>
+                            <th>Instansi</th>
+                            <th>Status</th> <!-- Kolom Status Ditambahkan -->
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if list_sarana %}
+                            {% for item in list_sarana %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="fw-bold">{{ item.jenis_sarana }}</td>
+                                <td>{{ item.no_lambung }}</td>
+                                <td>{{ item.merk }} / {{ item.tipe }}</td>
+                                <td>{{ item.instansi }}</td>
+                                <td>
+                                    <!-- Badge Status -->
+                                    <span class="badge bg-success-subtle text-success px-2 py-1">
+                                        {{ item.status if item.status else 'Aktif' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" title="Detail"><i class="bi bi-eye"></i></a>
+                                    <!-- Tombol Edit terhubung ke rute edit-sarana -->
+                                    <a href="/edit-sarana/{{ item.id }}" class="btn btn-sm btn-outline-warning" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <!-- Tombol Hapus terhubung ke rute hapus-sarana dengan konfirmasi -->
+                                    <a href="/hapus-sarana/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Hapus" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data sarana yang terdaftar.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

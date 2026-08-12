@@ -1,0 +1,4 @@
+static/uploads/
+*.xlsx
+token.pickle
+client_secret.json

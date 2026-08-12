@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permohonan Masuk - Admin Perizinan Alat Berat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { width: 260px; background-color: #0d4a2b; min-height: 100vh; position: fixed; top: 0; left: 0; color: white; z-index: 1000; overflow-y: auto; }
+        .sidebar .nav-link { color: #b0d8c2; margin-bottom: 3px; border-radius: 5px; font-size: 14px; text-decoration: none; display: block; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active-page { background-color: #145c35; color: white; }
+        .sidebar .nav-link.active-page { font-weight: bold; }
+        .main-content { margin-left: 260px; padding: 30px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <div class="d-flex align-items-center mb-4 px-2 pt-2">
+                <i class="bi bi-shield-lock-fill fs-4 me-2 text-white"></i>
+                <div>
+                    <h6 class="fw-bold mb-0 text-white">PANEL ADMIN</h6>
+                    <small style="color: #a3e4d7;">PENGELOLA</small>
+                </div>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a href="/admin" class="nav-link py-2 px-3 mb-1"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="/permohonan-masuk" class="nav-link active-page py-2 px-3 mb-1"><i class="bi bi-file-earmark-text me-2"></i> Permohonan Masuk</a></li>
+                <li class="nav-item"><a href="/master-sarana" class="nav-link py-2 px-3 mb-1"><i class="bi bi-truck me-2"></i> Master Sarana</a></li>
+                <li class="nav-item"><a href="/master-prasarana" class="nav-link py-2 px-3 mb-1"><i class="bi bi-buildings me-2"></i> Master Prasarana</a></li>
+                <li class="nav-item"><a href="/master-instalasi" class="nav-link py-2 px-3 mb-1"><i class="bi bi-gear me-2"></i> Master Instalasi</a></li>
+                <li class="nav-item"><a href="/master-peralatan" class="nav-link py-2 px-3 mb-1"><i class="bi bi-tools me-2"></i> Master Peralatan</a></li>
+            </ul>
+        </div>
+        <div>
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger py-2 px-3"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
+            <div>
+                <h4 class="fw-bold mb-1 text-dark"><i class="bi bi-file-earmark-text text-success me-2"></i>Daftar Permohonan Masuk</h4>
+                <p class="text-muted small mb-0">Kelola dan verifikasi permohonan unit yang diajukan oleh pengguna.</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Kode Unik</th>
+                            <th>Pemohon</th>
+                            <th>Jenis Sarana</th>
+                            <th>No. Lambung</th>
+                            <th>No. Polisi</th>
+                            <th>Instansi</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if list_permohonan %}
+                            {% for item in list_permohonan %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><span class="badge bg-secondary font-monospace">{{ item.kode_unik }}</span></td>
+                                <td><span class="fw-bold">{{ item.pemohon }}</span></td>
+                                <td>{{ item.jenis_sarana }}</td>
+                                <td>{{ item.no_lambung }}</td>
+                                <td>{{ item.no_polisi }}</td>
+                                <td>{{ item.instansi }}</td>
+                                <td>
+                                    {% if item.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark">{{ item.status }}</span>
+                                    {% elif item.status == 'Disetujui' %}
+                                        <span class="badge bg-success">{{ item.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ item.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Tombol Detail menuju halaman pemeriksaan foto dan spesifikasi -->
+                                    <a href="/detail-permohonan/{{ item.id }}" class="btn btn-sm btn-outline-primary fw-bold mb-1" title="Lihat Detail">
+                                        <i class="bi bi-eye"></i> Detail
+                                    </a>
+
+                                    {% if item.status == 'Pending' %}
+                                        <a href="/setujui/{{ item.id }}" class="btn btn-sm btn-success fw-bold mb-1" title="Setujui"><i class="bi bi-check-lg"></i></a>
+                                        <a href="/tolak/{{ item.id }}" class="btn btn-sm btn-danger fw-bold mb-1" title="Tolak"><i class="bi bi-x-lg"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">Belum ada permohonan yang masuk.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

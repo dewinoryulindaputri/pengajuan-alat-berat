@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - Sistem Perizinan</title>
+    <!-- Masukkan link CSS / Bootstrap yang Anda gunakan di project ini -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-cogs me-2"></i> Pengaturan Sistem</h4>
+                        <a href="{{ url_for('admin_page') }}" class="btn btn-light btn-sm text-success fw-bold">Kembali ke Dashboard</a>
+                    </div>
+                    <div class="card-body p-4">
+                        <form action="#" method="POST">
+                            <h5 class="text-secondary mb-3">Konfigurasi Umum</h5>
+                            <div class="mb-3">
+                                <label for="namaApp" class="form-label">Nama Aplikasi / Instansi</label>
+                                <input type="text" class="form-control" id="namaApp" value="Sistem Informasi Perizinan SPIP">
+                            </div>
+                            <div class="mb-3">
+                                <label for="emailAdmin" class="form-label">Email Administrator</label>
+                                <input type="email" class="form-control" id="emailAdmin" value="admin@perizinan.com">
+                            </div>
+                            
+                            <hr class="my-4">
+
+                            <h5 class="text-secondary mb-3">Konfigurasi Google Drive Backup</h5>
+                            <div class="mb-3">
+                                <label for="folderId" class="form-label">Google Drive Folder ID</label>
+                                <input type="text" class="form-control" id="folderId" value="1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg">
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-success px-4"><i class="fas fa-save me-2"></i> Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
