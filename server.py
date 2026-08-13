@@ -62,7 +62,7 @@ data_permohonan = []
 data_sarana = [
     {
         'id': 1,
-        'jenis_sarana': 'Dump Truck',
+        'jenis_sarana': 'Light Vehicle',
         'no_lambung': 'DT-001',
         'merk': 'Scania',
         'tipe': 'P460',
@@ -145,19 +145,28 @@ def proses_permohonan(kategori):
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
         'pemohon': session.get('nama', 'User'),
         'kategori': kategori,
+        # Field yang disesuaikan dengan revisi:
+        'jenis_sarana': request.form.get('jenis_sarana'),
+        'tahun_pembuatan': request.form.get('tahun_pembuatan'),
+        'kapasitas_orang': request.form.get('kapasitas_orang'),
+        
         'jenis_prasarana': request.form.get('jenis_prasarana'),
+        'tahun_konstruksi': request.form.get('tahun_konstruksi'),
         'nama_prasarana': request.form.get('nama_prasarana'),
         'lokasi': request.form.get('lokasi'),
-        'koordinat': request.form.get('koordinat'),
-        'jenis_sarana': request.form.get('jenis_sarana'),
-        'tahun': request.form.get('tahun'),
+        'koordinat': request.form.get('koordinat'), # Format Decimal Degrees
+        
+        'jenis_peralatan': request.form.get('jenis_peralatan'),
+        'tipe': request.form.get('tipe'),
         'no_lambung': request.form.get('no_lambung'),
+        
+        # Field pendukung lainnya
+        'tahun': request.form.get('tahun'),
         'aktivitas': request.form.get('aktivitas'),
         'no_polisi': request.form.get('no_polisi'),
         'instansi': request.form.get('instansi'),
         'merk': request.form.get('merk'),
         'kapasitas': request.form.get('kapasitas'),
-        'tipe': request.form.get('type'),
         'nomer_mesin': request.form.get('nomer_mesin'),
         'nomer_rangka': request.form.get('nomer_rangka'),
         'nomer_stnk': request.form.get('nomer_stnk'),
@@ -315,9 +324,9 @@ def export_excel():
             if sheet_name and sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
                 if kat == 'sarana':
-                    row_data = [item.get('jenis_sarana', ''), item.get('no_lambung', ''), item.get('no_polisi', ''), item.get('merk', ''), item.get('tipe', ''), item.get('tahun', ''), item.get('nomer_mesin', ''), item.get('nomer_rangka', ''), item.get('nomer_stnk', ''), item.get('kapasitas', ''), item.get('perusahaan_user', ''), item.get('instansi', ''), item.get('pemohon', ''), item.get('nomer_wa', ''), ', '.join(item.get('foto', []))]
+                    row_data = [item.get('jenis_sarana', ''), item.get('tahun_pembuatan', ''), item.get('kapasitas_orang', ''), item.get('no_lambung', ''), item.get('no_polisi', ''), item.get('merk', ''), item.get('tipe', ''), item.get('nomer_mesin', ''), item.get('nomer_rangka', ''), item.get('nomer_stnk', ''), item.get('kapasitas', ''), item.get('perusahaan_user', ''), item.get('instansi', ''), item.get('pemohon', ''), item.get('nomer_wa', ''), ', '.join(item.get('foto', []))]
                 elif kat == 'prasarana':
-                    row_data = [item.get('jenis_prasarana', ''), item.get('nama_prasarana', ''), item.get('tahun', ''), item.get('lokasi', ''), item.get('koordinat', ''), item.get('kapasitas', ''), ', '.join(item.get('foto', []))]
+                    row_data = [item.get('jenis_prasarana', ''), item.get('nama_prasarana', ''), item.get('tahun_konstruksi', ''), item.get('lokasi', ''), item.get('koordinat', ''), item.get('kapasitas', ''), ', '.join(item.get('foto', []))]
                 elif kat == 'instalasi':
                     row_data = [item.get('jenis_instalasi', ''), item.get('lokasi', ''), item.get('tahun', ''), item.get('kapasitas', ''), item.get('no_sertifikat', ''), item.get('tgl_berlaku', ''), item.get('tgl_berakhir', ''), ', '.join(item.get('foto', []))]
                 elif kat == 'peralatan':
@@ -336,8 +345,6 @@ def export_excel():
 def logout():
     session.clear()
     return redirect(url_for('login_page'))
-
-import os
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
