@@ -11,16 +11,67 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         body { background-color: #f8f9fa; }
-        .sidebar { width: 260px; background-color: #0d4a2b; min-height: 100vh; position: fixed; color: white; z-index: 1000; overflow-y: auto; }
-        .sidebar .nav-link { color: #b0d8c2; margin-bottom: 3px; border-radius: 5px; font-size: 14px; }
+        
+        .sidebar { 
+            width: 260px; 
+            background-color: #0d4a2b; 
+            min-height: 100vh; 
+            position: fixed; 
+            color: white; 
+            z-index: 1000; 
+            overflow-y: auto; 
+            transition: width 0.3s; 
+        }
+        .sidebar .nav-link { 
+            color: #b0d8c2; 
+            margin-bottom: 3px; 
+            border-radius: 5px; 
+            font-size: 14px; 
+            display: flex; 
+            align-items: center; 
+            white-space: nowrap; 
+        }
         .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #145c35; color: white; }
-        .main-content { margin-left: 260px; padding: 30px; }
+        
+        .main-content { 
+            margin-left: 260px; 
+            padding: 30px; 
+            transition: margin-left 0.3s; 
+        }
+        
         .btn-success-custom { background-color: #0d4a2b; border-color: #0d4a2b; color: white; }
         .btn-success-custom:hover { background-color: #145c35; border-color: #145c35; color: white; }
         .preview-box { position: relative; width: 90px; height: 90px; }
         .preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; }
+        
         /* Style agar select2 mengikuti lebar bootstrap */
         .select2-container .select2-selection--single { height: 38px; padding: 5px; border: 1px solid #dee2e6; border-radius: 8px; }
+
+        /* PENGATURAN RESPONSIF UNTUK HP (SERAGAM DENGAN DASHBOARD) */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 75px !important;
+                padding: 10px !important;
+            }
+            .main-content {
+                margin-left: 75px !important;
+                padding: 15px !important;
+            }
+            .sidebar h6,
+            .sidebar small,
+            .sidebar hr,
+            .sidebar .nav-link span {
+                display: none !important;
+            }
+            .sidebar .nav-link {
+                justify-content: center !important;
+                padding: 10px 0px !important;
+            }
+            .sidebar .nav-link i {
+                font-size: 1.4rem !important;
+                margin-right: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -36,12 +87,15 @@
                 </div>
             </div>
             <ul class="nav flex-column">
-                <li class="nav-item"><a href="{{ url_for('dashboard_page') }}" class="nav-link py-2 px-3"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="#" class="nav-link active py-2 px-3"><i class="bi bi-file-earmark-plus me-2"></i> Ajukan Permohonan</a></li>
-                <li class="nav-item"><a href="{{ url_for('riwayat_page') }}" class="nav-link py-2 px-3"><i class="bi bi-clock-history me-2"></i> Riwayat</a></li>
+                <li class="nav-item"><a href="{{ url_for('dashboard_page') }}" class="nav-link py-2 px-3"><i class="bi bi-grid-fill me-2"></i> <span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link active py-2 px-3"><i class="bi bi-file-earmark-plus me-2"></i> <span>Ajukan Permohonan</span></a></li>
+                <li class="nav-item"><a href="{{ url_for('riwayat_page') }}" class="nav-link py-2 px-3"><i class="bi bi-clock-history me-2"></i> <span>Riwayat</span></a></li>
             </ul>
         </div>
-        <a href="{{ url_for('logout') }}" class="nav-link text-danger py-2 px-3"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+        <div>
+            <hr class="text-secondary">
+            <a href="{{ url_for('logout') }}" class="nav-link text-danger py-2 px-3"><i class="bi bi-box-arrow-right me-2"></i> <span>Logout</span></a>
+        </div>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -177,7 +231,7 @@
             });
         });
 
-        // Script Foto yang sudah ada
+        // Script Foto
         const btnTambahFoto = document.getElementById('btnTambahFoto');
         const containerInputFoto = document.getElementById('containerInputFoto');
         const previewGrid = document.getElementById('previewGrid');
