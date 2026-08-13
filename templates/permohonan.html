@@ -111,7 +111,8 @@
                     {% elif kategori == 'peralatan' %}
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Jenis Peralatan *</label>
-                            <select name="jenis_peralatan" class="form-select" required>
+                            <select name="jenis_peralatan" id="jenisPeralatanSelect" class="form-select" required>
+                                <option value="">Cari atau pilih alat berat...</option>
                                 <option value="Excavator">Excavator</option>
                                 <option value="Bulldozer">Bulldozer</option>
                                 <option value="Dump Truck">Dump Truck</option>
@@ -162,7 +163,13 @@
         $(document).ready(function() {
             $('#jenisPrasaranaSelect').select2({
                 placeholder: "Cari atau pilih prasarana...",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
+            });
+            $('#jenisPeralatanSelect').select2({
+                placeholder: "Cari atau pilih alat berat...",
+                allowClear: true,
+                width: '100%'
             });
         });
 
