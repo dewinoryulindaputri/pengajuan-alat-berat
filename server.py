@@ -6,50 +6,36 @@ import openpyxl
 from flask import send_file
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-# --- MODIFIKASI: Import untuk OAuth ---
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-import pickle
+# Menggunakan service_account untuk kestabilan di server cloud seperti Railway
+from google.oauth2 import service_account
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
 
 # --- KONFIGURASI GOOGLE DRIVE ---
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SCOPES = ['https://www.googleapis.com/auth/drive'] # Akses penuh untuk membuat folder dan file
 GOOGLE_DRIVE_FOLDER_ID = '1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg' # ID Folder Uploads_Perizinan Anda
 
-# --- MODIFIKASI: Fungsi OAuth diperbarui (aman jika token.pickle belum ada) ---
+# --- FUNGSI GOOGLE DRIVE SERVICE ---
 def get_drive_service():
-    creds = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(SERVICE_ACCOUNT_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-            
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return build('drive', 'v3', credentials=creds)
 
-# --- FUNGSI BARU: Otomatis Buat atau Ambil Sub-Folder Kategori di dalam Uploads_Perizinan ---
+# --- FUNGSI OTOMATIS BUAT/AMBIL SUB-FOLDER KATEGORI ---
 def get_or_create_subfolder(service, parent_folder_id, folder_name):
     try:
-        query = f"name = '{folder_name}' and '{parent_folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        proper_name = folder_name.strip().capitalize()
+        query = f"name = '{proper_name}' and '{parent_folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
         results = service.files().list(q=query, fields="files(id, name)").execute()
         folders = results.get('files', [])
 
         if folders:
-            return folders[0]['id']  # Jika folder kategori sudah ada, ambil ID-nya
+            return folders[0]['id']  
         else:
-            # Jika belum ada, buat folder baru secara otomatis di dalam Uploads_Perizinan
             folder_metadata = {
-                'name': folder_name,
+                'name': proper_name,
                 'mimeType': 'application/vnd.google-apps.folder',
                 'parents': [parent_folder_id]
             }
@@ -57,22 +43,18 @@ def get_or_create_subfolder(service, parent_folder_id, folder_name):
             return folder.get('id')
     except Exception as e:
         print(f"Gagal membuat/mencari subfolder di Drive: {e}")
-        return parent_folder_id # Fallback ke folder utama jika gagal
+        return parent_folder_id 
 
 def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
         
-        # 1. Tentukan nama sub-folder berdasarkan kategori (huruf kapital di depan, misal: Sarana)
         nama_subfolder = kategori.capitalize()
-        
-        # 2. Dapatkan ID sub-folder secara otomatis (buat baru jika belum ada di dalam Uploads_Perizinan)
         target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, nama_subfolder)
         
-        file_content = file_storage.read()
-        media_body = MediaIoBaseUpload(io.BytesIO(file_content), mimetype=file_storage.content_type, resumable=True)
+        file_storage.seek(0)
+        media_body = MediaIoBaseUpload(file_storage, mimetype=file_storage.content_type, resumable=True)
         
-        # 3. Masukkan file ke dalam sub-folder kategori tujuan
         file_metadata = {
             'name': file_storage.filename, 
             'parents': [target_folder_id]
@@ -81,7 +63,7 @@ def upload_to_drive(file_storage, kategori):
         file = service.files().create(body=file_metadata, media_body=media_body, fields='id').execute()
         return file.get('id')
     except Exception as e:
-        print(f"Gagal upload ke Drive: {e}")
+        print(f"DEBUG ERROR UPLOAD: {e}")
         return None
 
 # Konfigurasi folder untuk menyimpan hasil upload foto lokal (backup/development)
@@ -171,7 +153,6 @@ def proses_permohonan(kategori):
             foto_filenames.append(filename)
             file.seek(0)
             
-            # Memanggil fungsi upload dengan menyertakan kategori agar masuk ke folder otomatis yang sesuai
             drive_id = upload_to_drive(file, kategori)
             if drive_id:
                 drive_ids.append(drive_id)
