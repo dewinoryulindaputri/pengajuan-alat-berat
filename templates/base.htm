@@ -6,12 +6,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        .sidebar { width: 260px; background-color: #0d4a2b; height: 100vh; position: fixed; left: 0; top: 0; overflow-y: auto; z-index: 1000; transition: width 0.3s; }
+        .sidebar { width: 260px; background-color: #0d4a2b; height: 100vh; position: fixed; left: 0; top: 0; overflow-y: auto; z-index: 1000; }
         .nav-link { color: #b0d8c2; padding: 12px 20px; display: flex; align-items: center; white-space: nowrap; }
         .nav-link:hover { background-color: #145c35; color: white; }
-        .main-content { margin-left: 260px; padding: 30px; transition: margin-left 0.3s; }
+        .main-content { margin-left: 260px; padding: 30px; }
 
-        /* Media Query untuk HP / Layar di bawah 768px */
+        /* Pengaturan Responsif untuk HP / Layar Kecil */
         @media (max-width: 768px) {
             .sidebar {
                 width: 70px !important;
@@ -21,16 +21,17 @@
                 margin-left: 70px !important;
                 padding: 15px !important;
             }
+            /* Sembunyikan semua teks, judul, dan biarkan ikon yang tampil */
             .sidebar h5,
             .sidebar .nav-link span {
                 display: none !important;
             }
             .sidebar .nav-link {
-                justify-content: center !important;
-                padding: 12px 0px !important;
+                justify-content: center;
+                padding: 12px 5px !important;
             }
             .sidebar .nav-link i {
-                font-size: 1.4rem !important;
+                font-size: 1.3rem;
                 margin-right: 0 !important;
             }
         }
@@ -50,11 +51,12 @@
             <li class="nav-item">
                 <a href="/pengaturan" class="nav-link"><i class="bi bi-sliders me-2"></i> <span>Pengaturan</span></a>
             </li>
+            <!-- Tambahkan menu lainnya di sini -->
         </ul>
         <a href="/logout" class="nav-link text-danger mt-5"><i class="bi bi-box-arrow-right me-2"></i> <span>Logout</span></a>
     </div>
 
-    <!-- Area Konten -->
+    <!-- Area Konten yang akan berubah-ubah -->
     <div class="main-content">
         {% block content %}
         {% endblock %}
