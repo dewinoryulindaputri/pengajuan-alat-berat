@@ -17,7 +17,7 @@ app.secret_key = 'kunci_rahasia_spip'
 # --- KONFIGURASI GOOGLE DRIVE ---
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-GOOGLE_DRIVE_FOLDER_ID = '1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg'
+GOOGLE_DRIVE_FOLDER_ID = '1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg' # ID Folder Uploads_Perizinan Anda
 
 # --- MODIFIKASI: Fungsi OAuth diperbarui (aman jika token.pickle belum ada) ---
 def get_drive_service():
@@ -31,26 +31,60 @@ def get_drive_service():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(SERVICE_ACCOUNT_FILE, SCOPES)
-            # Menggunakan port=0 agar otomatis menyesuaikan dengan tipe Desktop App
             creds = flow.run_local_server(port=0)
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
             
     return build('drive', 'v3', credentials=creds)
 
-def upload_to_drive(file_storage):
+# --- FUNGSI BARU: Otomatis Buat atau Ambil Sub-Folder Kategori di dalam Uploads_Perizinan ---
+def get_or_create_subfolder(service, parent_folder_id, folder_name):
+    try:
+        query = f"name = '{folder_name}' and '{parent_folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        results = service.files().list(q=query, fields="files(id, name)").execute()
+        folders = results.get('files', [])
+
+        if folders:
+            return folders[0]['id']  # Jika folder kategori sudah ada, ambil ID-nya
+        else:
+            # Jika belum ada, buat folder baru secara otomatis di dalam Uploads_Perizinan
+            folder_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder',
+                'parents': [parent_folder_id]
+            }
+            folder = service.files().create(body=folder_metadata, fields='id').execute()
+            return folder.get('id')
+    except Exception as e:
+        print(f"Gagal membuat/mencari subfolder di Drive: {e}")
+        return parent_folder_id # Fallback ke folder utama jika gagal
+
+def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
+        
+        # 1. Tentukan nama sub-folder berdasarkan kategori (huruf kapital di depan, misal: Sarana)
+        nama_subfolder = kategori.capitalize()
+        
+        # 2. Dapatkan ID sub-folder secara otomatis (buat baru jika belum ada di dalam Uploads_Perizinan)
+        target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, nama_subfolder)
+        
         file_content = file_storage.read()
         media_body = MediaIoBaseUpload(io.BytesIO(file_content), mimetype=file_storage.content_type, resumable=True)
-        file_metadata = {'name': file_storage.filename, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
+        
+        # 3. Masukkan file ke dalam sub-folder kategori tujuan
+        file_metadata = {
+            'name': file_storage.filename, 
+            'parents': [target_folder_id]
+        }
+        
         file = service.files().create(body=file_metadata, media_body=media_body, fields='id').execute()
         return file.get('id')
     except Exception as e:
         print(f"Gagal upload ke Drive: {e}")
         return None
 
-# Konfigurasi folder untuk menyimpan hasil upload foto
+# Konfigurasi folder untuk menyimpan hasil upload foto lokal (backup/development)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -136,7 +170,9 @@ def proses_permohonan(kategori):
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             foto_filenames.append(filename)
             file.seek(0)
-            drive_id = upload_to_drive(file)
+            
+            # Memanggil fungsi upload dengan menyertakan kategori agar masuk ke folder otomatis yang sesuai
+            drive_id = upload_to_drive(file, kategori)
             if drive_id:
                 drive_ids.append(drive_id)
     
@@ -145,22 +181,17 @@ def proses_permohonan(kategori):
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
         'pemohon': session.get('nama', 'User'),
         'kategori': kategori,
-        # Field yang disesuaikan dengan revisi:
         'jenis_sarana': request.form.get('jenis_sarana'),
         'tahun_pembuatan': request.form.get('tahun_pembuatan'),
         'kapasitas_orang': request.form.get('kapasitas_orang'),
-        
         'jenis_prasarana': request.form.get('jenis_prasarana'),
         'tahun_konstruksi': request.form.get('tahun_konstruksi'),
         'nama_prasarana': request.form.get('nama_prasarana'),
         'lokasi': request.form.get('lokasi'),
-        'koordinat': request.form.get('koordinat'), # Format Decimal Degrees
-        
+        'koordinat': request.form.get('koordinat'),
         'jenis_peralatan': request.form.get('jenis_peralatan'),
         'tipe': request.form.get('tipe'),
         'no_lambung': request.form.get('no_lambung'),
-        
-        # Field pendukung lainnya
         'tahun': request.form.get('tahun'),
         'aktivitas': request.form.get('aktivitas'),
         'no_polisi': request.form.get('no_polisi'),
