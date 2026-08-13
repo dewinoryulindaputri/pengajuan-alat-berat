@@ -61,11 +61,10 @@
                     {% if kategori == 'sarana' %}
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Jenis Sarana *</label>
-                            <select name="jenis_sarana" class="form-select" required>
+                            <select name="jenis_sarana" id="jenisSaranaSelect" class="form-select" required>
+                                <option value="">Cari atau pilih jenis sarana...</option>
                                 <option value="Light Vehicle">Light Vehicle</option>
-                                <option value="Heavy Equipment">Heavy Equipment</option>
-                                <option value="Dump Truck">Dump Truck</option>
-                                <option value="Bus Karyawan">Bus Karyawan</option>
+                                <option value="Bus">Bus</option>
                             </select>
                         </div>
                         <div class="col-md-6"><label class="form-label small fw-bold">Tahun Pembuatan *</label><input type="number" name="tahun_pembuatan" class="form-control" required></div>
@@ -161,6 +160,11 @@
     <script>
         // Inisialisasi Select2
         $(document).ready(function() {
+            $('#jenisSaranaSelect').select2({
+                placeholder: "Cari atau pilih jenis sarana...",
+                allowClear: true,
+                width: '100%'
+            });
             $('#jenisPrasaranaSelect').select2({
                 placeholder: "Cari atau pilih prasarana...",
                 allowClear: true,
