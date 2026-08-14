@@ -105,6 +105,55 @@ def admin_page():
         return redirect(url_for('login_page'))
     return render_template('admin.html')
 
+# --- RUTE MENU ADMIN (MENGATASI ERROR 404) ---
+@app.route('/permohonan-masuk')
+def permohonan_masuk_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('permohonan_masuk.html', list_permohonan=data_permohonan)
+
+@app.route('/master-sarana')
+def master_sarana_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('master_sarana.html', list_sarana=data_sarana)
+
+@app.route('/master-prasarana')
+def master_prasarana_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('master_prasarana.html')
+
+@app.route('/master-instalasi')
+def master_instalasi_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('master_instalasi.html')
+
+@app.route('/master-peralatan')
+def master_peralatan_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('master_peralatan.html')
+
+@app.route('/laporan')
+def laporan_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('laporan.html')
+
+@app.route('/pengguna')
+def pengguna_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('pengguna.html', list_pengguna=data_pengguna)
+
+@app.route('/pengaturan')
+def pengaturan_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('pengaturan.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
