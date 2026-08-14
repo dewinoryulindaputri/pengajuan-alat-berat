@@ -141,26 +141,42 @@ def admin_page():
         return redirect(url_for('login_page'))
     return render_template('admin.html')
 
-# --- RUTE MENU ADMIN (MENGATASI ERROR 404) ---
+# --- RUTE MENU ADMIN ---
 @app.route('/permohonan-masuk')
 def permohonan_masuk_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
     return render_template('permohonan_masuk.html', list_permohonan=data_permohonan)
 
-# --- RUTE TAMBAHAN UNTUK DETAIL PERMOHONAN ---
 @app.route('/detail-permohonan/<int:id_permohonan>')
 def detail_permohonan_page(id_permohonan):
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    
-    # Cari data permohonan berdasarkan ID
     permohonan = next((item for item in data_permohonan if item['id'] == id_permohonan), None)
-    
     if not permohonan:
         return "Data permohonan tidak ditemukan", 404
-        
     return render_template('detail_permohonan.html', permohonan=permohonan)
+
+# --- RUTE SETUJUI & TOLAK ---
+@app.route('/setujui/<int:id_permohonan>')
+def setujui_permohonan(id_permohonan):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    for item in data_permohonan:
+        if item['id'] == id_permohonan:
+            item['status'] = 'Disetujui'
+            break
+    return redirect(url_for('permohonan_masuk_page'))
+
+@app.route('/tolak/<int:id_permohonan>')
+def tolak_permohonan(id_permohonan):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    for item in data_permohonan:
+        if item['id'] == id_permohonan:
+            item['status'] = 'Ditolak'
+            break
+    return redirect(url_for('permohonan_masuk_page'))
 
 @app.route('/master-sarana')
 def master_sarana_page():
@@ -213,21 +229,17 @@ def logout():
 def permohonan_page(kategori):
     if not session.get('user'):
         return redirect(url_for('login_page'))
-    
     kategori_valid = ['sarana', 'prasarana', 'instalasi', 'peralatan']
     if kategori not in kategori_valid:
         return redirect(url_for('dashboard_page'))
-        
     return render_template('permohonan.html', kategori=kategori)
 
 @app.route('/proses-permohonan/<kategori>', methods=['POST'])
 def proses_permohonan(kategori):
     if not session.get('user'):
         return redirect(url_for('login_page'))
-    
     file_list = []
     drive_ids = []
-    
     def handle_file_upload(input_name):
         files = request.files.getlist(input_name)
         for file in files:
@@ -239,10 +251,8 @@ def proses_permohonan(kategori):
                 drive_id = upload_to_drive(file, kategori)
                 if drive_id:
                     drive_ids.append(drive_id)
-
     handle_file_upload('foto')
     handle_file_upload('dokumen')
-
     permohonan_baru = {
         'id': len(data_permohonan) + 1,
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
@@ -276,7 +286,6 @@ def proses_permohonan(kategori):
         'foto': file_list,
         'foto_drive_ids': drive_ids
     }
-    
     data_permohonan.append(permohonan_baru)
     return redirect(url_for('riwayat_page'))
 
