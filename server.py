@@ -6,7 +6,6 @@ import openpyxl
 from flask import send_file
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-# Menggunakan service_account untuk kestabilan di server cloud seperti Railway
 from google.oauth2 import service_account
 
 app = Flask(__name__)
@@ -14,23 +13,20 @@ app.secret_key = 'kunci_rahasia_spip'
 
 # --- KONFIGURASI GOOGLE DRIVE ---
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
-SCOPES = ['https://www.googleapis.com/auth/drive'] # Akses penuh untuk membuat folder dan file
-GOOGLE_DRIVE_FOLDER_ID = '1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg' # ID Folder Uploads_Perizinan Anda
+SCOPES = ['https://www.googleapis.com/auth/drive']
+GOOGLE_DRIVE_FOLDER_ID = '1H8crWdaeqPcUHrlpqaqrs4F2WoY89nzg'
 
-# --- FUNGSI GOOGLE DRIVE SERVICE ---
 def get_drive_service():
     creds = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return build('drive', 'v3', credentials=creds)
 
-# --- FUNGSI OTOMATIS BUAT/AMBIL SUB-FOLDER KATEGORI ---
 def get_or_create_subfolder(service, parent_folder_id, folder_name):
     try:
         proper_name = folder_name.strip().capitalize()
         query = f"name = '{proper_name}' and '{parent_folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
         results = service.files().list(q=query, fields="files(id, name)").execute()
         folders = results.get('files', [])
-
         if folders:
             return folders[0]['id']  
         else:
@@ -48,7 +44,6 @@ def get_or_create_subfolder(service, parent_folder_id, folder_name):
 def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
-        
         nama_subfolder = kategori.capitalize()
         target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, nama_subfolder)
         
@@ -66,127 +61,95 @@ def upload_to_drive(file_storage, kategori):
         print(f"DEBUG ERROR UPLOAD: {e}")
         return None
 
-# Konfigurasi folder untuk menyimpan hasil upload foto lokal (backup/development)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# DATABASE SEMENTARA
 data_permohonan = []
-data_sarana = [
-    {
-        'id': 1,
-        'jenis_sarana': 'Light Vehicle',
-        'no_lambung': 'DT-001',
-        'merk': 'Scania',
-        'tipe': 'P460',
-        'instansi': 'Departemen Tambang',
-        'status': 'Aktif'
-    }
-]
-
+data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
 data_pengguna = [
     {'id': 1, 'nama': 'Super Administrator', 'email': 'admin@perizinan.com', 'role': 'Administrator'},
     {'id': 2, 'nama': 'Petugas Verifikasi', 'email': 'petugas@perizinan.com', 'role': 'Petugas'}
 ]
 
 @app.route('/')
-def login_page():
-    return render_template('login.html')
+def login_page(): return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def do_login():
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
     session.clear() 
-    
     if username == 'admin' and password == '12345':
         session['user'] = 'admin'
         session['nama'] = 'Administrator'
     else:
-        nama_user = username if username else 'User'
         session['user'] = 'user'
-        session['nama'] = nama_user
-        sudah_ada = any(p['nama'] == nama_user for p in data_pengguna)
-        if not sudah_ada:
-            data_pengguna.append({
-                'id': len(data_pengguna) + 1,
-                'nama': nama_user,
-                'email': f"{nama_user.lower().replace(' ', '')}@perizinan.com",
-                'role': 'User / Pemohon'
-            })
+        session['nama'] = username if username else 'User'
     return redirect(url_for('dashboard_page'))
 
 @app.route('/dashboard')
 def dashboard_page():
     role = session.get('user')
-    if role == 'admin':
-        return redirect(url_for('admin_page'))
-    elif role == 'user':
-        return render_template('index.html')
+    if role == 'admin': return redirect(url_for('admin_page'))
+    elif role == 'user': return render_template('index.html')
     return redirect(url_for('login_page'))
-
-@app.route('/permohonan/<kategori>')
-def permohonan_page(kategori):
-    if not session.get('user'):
-        return redirect(url_for('login_page'))
-    kategori_valid = ['sarana', 'prasarana', 'instalasi', 'peralatan']
-    if kategori not in kategori_valid:
-        return redirect(url_for('dashboard_page'))
-    return render_template('permohonan.html', kategori=kategori)
 
 @app.route('/proses-permohonan/<kategori>', methods=['POST'])
 def proses_permohonan(kategori):
-    if not session.get('user'):
-        return redirect(url_for('login_page'))
+    if not session.get('user'): return redirect(url_for('login_page'))
     
-    foto_filenames = []
+    file_list = []
     drive_ids = []
-    files = request.files.getlist('foto')
     
-    for file in files:
-        if file and file.filename != '':
-            filename = file.filename
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            foto_filenames.append(filename)
-            file.seek(0)
-            
-            drive_id = upload_to_drive(file, kategori)
-            if drive_id:
-                drive_ids.append(drive_id)
-    
+    # Fungsi pembantu untuk memproses file (Foto & Dokumen)
+    def handle_file_upload(input_name):
+        files = request.files.getlist(input_name)
+        for file in files:
+            if file and file.filename != '':
+                filename = file.filename
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file_list.append(filename)
+                file.seek(0)
+                drive_id = upload_to_drive(file, kategori)
+                if drive_id: drive_ids.append(drive_id)
+
+    # Memproses foto dan dokumen (pastikan input name di HTML sesuai)
+    handle_file_upload('foto')
+    handle_file_upload('dokumen')
+
     permohonan_baru = {
         'id': len(data_permohonan) + 1,
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
         'pemohon': session.get('nama', 'User'),
         'kategori': kategori,
         'jenis_sarana': request.form.get('jenis_sarana'),
+        'jenis_prasarana': request.form.get('jenis_prasarana'),
+        'jenis_instalasi': request.form.get('jenis_instalasi'),
+        'jenis_peralatan': request.form.get('jenis_peralatan'),
         'tahun_pembuatan': request.form.get('tahun_pembuatan'),
         'kapasitas_orang': request.form.get('kapasitas_orang'),
-        'jenis_prasarana': request.form.get('jenis_prasarana'),
-        'tahun_konstruksi': request.form.get('tahun_konstruksi'),
-        'nama_prasarana': request.form.get('nama_prasarana'),
-        'lokasi': request.form.get('lokasi'),
-        'koordinat': request.form.get('koordinat'),
-        'jenis_peralatan': request.form.get('jenis_peralatan'),
-        'tipe': request.form.get('tipe'),
         'no_lambung': request.form.get('no_lambung'),
-        'tahun': request.form.get('tahun'),
-        'aktivitas': request.form.get('aktivitas'),
         'no_polisi': request.form.get('no_polisi'),
-        'instansi': request.form.get('instansi'),
         'merk': request.form.get('merk'),
-        'kapasitas': request.form.get('kapasitas'),
+        'tipe': request.form.get('tipe'),
         'nomer_mesin': request.form.get('nomer_mesin'),
         'nomer_rangka': request.form.get('nomer_rangka'),
         'nomer_stnk': request.form.get('nomer_stnk'),
-        'perusahaan_user': request.form.get('perusahaan_user'),
-        'nomer_wa': request.form.get('nomer_wa'),
+        'instansi': request.form.get('instansi'),
+        'nama_prasarana': request.form.get('nama_prasarana'),
+        'tahun_konstruksi': request.form.get('tahun_konstruksi'),
+        'lokasi': request.form.get('lokasi'),
+        'koordinat': request.form.get('koordinat'),
+        'tahun': request.form.get('tahun'),
+        'kapasitas': request.form.get('kapasitas'),
+        'no_sertifikat': request.form.get('no_sertifikat'),
+        'tgl_berlaku': request.form.get('tgl_berlaku'),
+        'tgl_berakhir': request.form.get('tgl_berakhir'),
         'catatan': request.form.get('catatan'),
         'status': 'Pending',
-        'foto': foto_filenames,
+        'foto': file_list,
         'foto_drive_ids': drive_ids
     }
     
@@ -195,168 +158,10 @@ def proses_permohonan(kategori):
 
 @app.route('/riwayat')
 def riwayat_page():
-    if not session.get('user'):
-        return redirect(url_for('login_page'))
+    if not session.get('user'): return redirect(url_for('login_page'))
     current_user = session.get('nama', 'User')
     user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
     return render_template('riwayat.html', list_riwayat=user_permohonan)
-
-@app.route('/detail-permohonan/<int:id>')
-def detail_permohonan_page(id):
-    if not session.get('user'):
-        return redirect(url_for('login_page'))
-    permohonan = next((item for item in data_permohonan if item['id'] == id), None)
-    if not permohonan:
-        return redirect(url_for('dashboard_page'))
-    return render_template('detail_permohonan.html', permohonan=permohonan)
-
-@app.route('/admin')
-def admin_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('admin.html')
-
-@app.route('/permohonan-masuk')
-def permohonan_masuk_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('permohonan_masuk.html', list_permohonan=data_permohonan)
-
-@app.route('/setujui/<int:id>')
-def setujui_permohonan(id):
-    if session.get('user') != 'admin': return redirect(url_for('dashboard_page'))
-    for item in data_permohonan:
-        if item['id'] == id:
-            item['status'] = 'Disetujui'
-            break
-    return redirect(url_for('permohonan_masuk_page'))
-
-@app.route('/tolak/<int:id>')
-def tolak_permohonan(id):
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    for item in data_permohonan:
-        if item['id'] == id:
-            item['status'] = 'Ditolak'
-            break
-    return redirect(url_for('permohonan_masuk_page'))
-
-@app.route('/pengaturan')
-def pengaturan_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('pengaturan.html')
-
-@app.route('/master-sarana')
-def master_sarana_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('master_sarana.html', data_sarana=data_sarana)
-
-@app.route('/master-prasarana')
-def master_prasarana_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('master_prasarana.html')
-
-@app.route('/master-instalasi')
-def master_instalasi_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('master_instalasi.html')
-
-@app.route('/master-peralatan')
-def master_peralatan_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('master_peralatan.html')
-
-@app.route('/tambah-sarana')
-def tambah_sarana_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('tambah_sarana.html')
-
-@app.route('/edit-sarana')
-def edit_sarana_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('edit_sarana.html')
-
-@app.route('/pengguna')
-def pengguna_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('pengguna.html', data_pengguna=data_pengguna)
-
-@app.route('/tambah-pengguna')
-def tambah_pengguna_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('tambah_pengguna.html')
-
-@app.route('/manajemen-pengguna')
-def manajemen_pengguna_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('manajemen_pengguna.html')
-
-@app.route('/laporan')
-def laporan_page():
-    if session.get('user') != 'admin':
-        return redirect(url_for('dashboard_page'))
-    return render_template('laporan.html', list_permohonan=data_permohonan)
-
-@app.route('/export-excel')
-def export_excel():
-    if session.get('user') != 'admin':
-        return redirect(url_for('login_page'))
-    
-    template_path = 'FORM ISIAN SPIP.xlsx'
-    if not os.path.exists(template_path):
-        wb = openpyxl.Workbook()
-        wb.remove(wb.active)
-        for kat in ['SARANA', 'PRASARANA', 'INSTALASI', 'PERALATAN']:
-            wb.create_sheet(title=kat)
-        wb.save(template_path)
-        
-    try:
-        wb = openpyxl.load_workbook(template_path)
-        sheet_mapping = {
-            'sarana': 'SARANA',
-            'prasarana': 'PRASARANA',
-            'instalasi': 'INSTALASI',
-            'peralatan': 'PERALATAN'
-        }
-        
-        for item in data_permohonan:
-            kat = item.get('kategori', '').strip().lower()
-            sheet_name = sheet_mapping.get(kat)
-            
-            if sheet_name and sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
-                if kat == 'sarana':
-                    row_data = [item.get('jenis_sarana', ''), item.get('tahun_pembuatan', ''), item.get('kapasitas_orang', ''), item.get('no_lambung', ''), item.get('no_polisi', ''), item.get('merk', ''), item.get('tipe', ''), item.get('nomer_mesin', ''), item.get('nomer_rangka', ''), item.get('nomer_stnk', ''), item.get('kapasitas', ''), item.get('perusahaan_user', ''), item.get('instansi', ''), item.get('pemohon', ''), item.get('nomer_wa', ''), ', '.join(item.get('foto', []))]
-                elif kat == 'prasarana':
-                    row_data = [item.get('jenis_prasarana', ''), item.get('nama_prasarana', ''), item.get('tahun_konstruksi', ''), item.get('lokasi', ''), item.get('koordinat', ''), item.get('kapasitas', ''), ', '.join(item.get('foto', []))]
-                elif kat == 'instalasi':
-                    row_data = [item.get('jenis_instalasi', ''), item.get('lokasi', ''), item.get('tahun', ''), item.get('kapasitas', ''), item.get('no_sertifikat', ''), item.get('tgl_berlaku', ''), item.get('tgl_berakhir', ''), ', '.join(item.get('foto', []))]
-                elif kat == 'peralatan':
-                    row_data = [item.get('jenis_peralatan', ''), item.get('no_lambung', ''), item.get('merk', ''), item.get('tipe', ''), item.get('nomer_mesin', ''), item.get('nomer_rangka', ''), item.get('tahun', ''), item.get('kapasitas', ''), item.get('no_sertifikat', ''), item.get('tgl_berlaku', ''), item.get('tgl_berakhir', ''), ', '.join(item.get('foto', []))]
-                else: continue
-                ws.append(row_data)
-        output = io.BytesIO()
-        wb.save(output)
-        output.seek(0)
-        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='FORM_ISIAN_SPIP_Terisi.xlsx')
-    except Exception as e:
-        print(f"Gagal memproses file Excel: {e}")
-        return "Terjadi kesalahan saat memproses file Excel.", 500
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login_page'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
