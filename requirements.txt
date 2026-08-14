@@ -1,7 +1,7 @@
-Flask
+flask
 pandas
 openpyxl
 google-api-python-client
-google-auth-oauthlib
 google-auth-httplib2
-gunicorn
+google-auth-oauthlib
+pypdf
