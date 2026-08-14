@@ -74,7 +74,8 @@ data_pengguna = [
 ]
 
 @app.route('/')
-def login_page(): return render_template('login.html')
+def login_page():
+    return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def do_login():
@@ -92,18 +93,42 @@ def do_login():
 @app.route('/dashboard')
 def dashboard_page():
     role = session.get('user')
-    if role == 'admin': return redirect(url_for('admin_page'))
-    elif role == 'user': return render_template('index.html')
+    if role == 'admin':
+        return redirect(url_for('admin_page'))
+    elif role == 'user':
+        return render_template('index.html')
     return redirect(url_for('login_page'))
+
+@app.route('/admin')
+def admin_page():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    return render_template('admin.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login_page'))
+
+@app.route('/permohonan/<kategori>')
+def permohonan_page(kategori):
+    if not session.get('user'):
+        return redirect(url_for('login_page'))
+    
+    kategori_valid = ['sarana', 'prasarana', 'instalasi', 'peralatan']
+    if kategori not in kategori_valid:
+        return redirect(url_for('dashboard_page'))
+        
+    return render_template('permohonan.html', kategori=kategori)
 
 @app.route('/proses-permohonan/<kategori>', methods=['POST'])
 def proses_permohonan(kategori):
-    if not session.get('user'): return redirect(url_for('login_page'))
+    if not session.get('user'):
+        return redirect(url_for('login_page'))
     
     file_list = []
     drive_ids = []
     
-    # Fungsi pembantu untuk memproses file (Foto & Dokumen)
     def handle_file_upload(input_name):
         files = request.files.getlist(input_name)
         for file in files:
@@ -113,9 +138,9 @@ def proses_permohonan(kategori):
                 file_list.append(filename)
                 file.seek(0)
                 drive_id = upload_to_drive(file, kategori)
-                if drive_id: drive_ids.append(drive_id)
+                if drive_id:
+                    drive_ids.append(drive_id)
 
-    # Memproses foto dan dokumen (pastikan input name di HTML sesuai)
     handle_file_upload('foto')
     handle_file_upload('dokumen')
 
@@ -158,7 +183,8 @@ def proses_permohonan(kategori):
 
 @app.route('/riwayat')
 def riwayat_page():
-    if not session.get('user'): return redirect(url_for('login_page'))
+    if not session.get('user'):
+        return redirect(url_for('login_page'))
     current_user = session.get('nama', 'User')
     user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
     return render_template('riwayat.html', list_riwayat=user_permohonan)
