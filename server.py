@@ -150,7 +150,8 @@ def permohonan_masuk_page():
 
 @app.route('/detail-permohonan/<int:id_permohonan>')
 def detail_permohonan_page(id_permohonan):
-    if session.get('user') != 'admin':
+    # Diizinkan bagi user yang sudah login (admin maupun user biasa)
+    if not session.get('user'):
         return redirect(url_for('login_page'))
     permohonan = next((item for item in data_permohonan if item['id'] == id_permohonan), None)
     if not permohonan:
@@ -206,7 +207,7 @@ def master_peralatan_page():
 def laporan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('laporan.html')
+    return render_template('laporan.html', list_permohonan=data_permohonan)
 
 @app.route('/pengguna')
 def pengguna_page():
