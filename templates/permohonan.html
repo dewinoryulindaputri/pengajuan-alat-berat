@@ -193,7 +193,7 @@
                                 <div class="p-2 border rounded-3 bg-white item-foto">
                                     <div class="input-group input-group-sm mb-2">
                                         <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
-                                        <button type="button" class="btn btn-outline-danger btnHapus" disabled><i class="bi bi-trash"></i> Hapus</button>
+                                        <button type="button" class="btn btn-outline-danger btnHapus"><i class="bi bi-trash"></i> Hapus</button>
                                     </div>
                                     <div class="preview-container">
                                         <small class="text-muted fst-italic">Belum ada foto dipilih</small>
@@ -253,21 +253,31 @@
             div.className = 'p-2 border rounded-3 bg-white item-foto';
             div.innerHTML = `
                 <div class="input-group input-group-sm mb-2">
-                    <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
+                    <input type="file" name="foto" class="form-control file-input" accept="image/*">
                     <button type="button" class="btn btn-outline-danger btnHapus"><i class="bi bi-trash"></i> Hapus</button>
                 </div>
                 <div class="preview-container">
                     <small class="text-muted fst-italic">Belum ada foto dipilih</small>
                 </div>`;
             containerInputFoto.appendChild(div);
-            updateHapusButtons();
         });
 
         containerInputFoto.addEventListener('click', (e) => {
             const btnHapus = e.target.closest('.btnHapus');
             if (btnHapus) {
-                btnHapus.closest('.item-foto').remove();
-                updateHapusButtons();
+                const itemFoto = btnHapus.closest('.item-foto');
+                const fileInput = itemFoto.querySelector('.file-input');
+                const previewContainer = itemFoto.querySelector('.preview-container');
+                const allItems = containerInputFoto.querySelectorAll('.item-foto');
+
+                // Kosongkan nilai file input dan preview gambar
+                fileInput.value = '';
+                previewContainer.innerHTML = `<small class="text-muted fst-italic">Belum ada foto dipilih</small>`;
+
+                // Jika ini adalah baris tambahan (bukan baris pertama yang paling atas), hapus barisnya secara total
+                if (allItems.length > 1) {
+                    itemFoto.remove();
+                }
             }
         });
 
@@ -288,13 +298,6 @@
                 }
             }
         });
-
-        function updateHapusButtons() {
-            const items = containerInputFoto.querySelectorAll('.item-foto');
-            items.forEach((item) => {
-                item.querySelector('.btnHapus').disabled = (items.length === 1);
-            });
-        }
     </script>
 </body>
 </html>
