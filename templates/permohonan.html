@@ -41,8 +41,7 @@
         
         .btn-success-custom { background-color: #0d4a2b; border-color: #0d4a2b; color: white; }
         .btn-success-custom:hover { background-color: #145c35; border-color: #145c35; color: white; }
-        .preview-box { position: relative; width: 90px; height: 90px; }
-        .preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; }
+        .preview-img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; }
         
         /* Style agar select2 mengikuti lebar bootstrap */
         .select2-container .select2-selection--single { height: 38px; padding: 5px; border: 1px solid #dee2e6; border-radius: 8px; }
@@ -190,13 +189,17 @@
                                 <label class="form-label fw-bold"><i class="bi bi-camera-fill text-success me-2"></i> Unggah Foto</label>
                                 <button type="button" id="btnTambahFoto" class="btn btn-sm btn-success"><i class="bi bi-plus-circle"></i> Tambah</button>
                             </div>
-                            <div id="containerInputFoto" class="vstack gap-2">
-                                <div class="input-group input-group-sm item-foto">
-                                    <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
-                                    <button type="button" class="btn btn-outline-danger btnHapus" disabled><i class="bi bi-trash"></i></button>
+                            <div id="containerInputFoto" class="vstack gap-3">
+                                <div class="p-2 border rounded-3 bg-white item-foto">
+                                    <div class="input-group input-group-sm mb-2">
+                                        <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
+                                        <button type="button" class="btn btn-outline-danger btnHapus" disabled><i class="bi bi-trash"></i> Hapus</button>
+                                    </div>
+                                    <div class="preview-container">
+                                        <small class="text-muted fst-italic">Belum ada foto dipilih</small>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="previewGrid" class="d-flex flex-wrap gap-2 mt-3"></div>
                         </div>
                     </div>
 
@@ -244,13 +247,18 @@
         // Script Foto
         const btnTambahFoto = document.getElementById('btnTambahFoto');
         const containerInputFoto = document.getElementById('containerInputFoto');
-        const previewGrid = document.getElementById('previewGrid');
 
         btnTambahFoto.addEventListener('click', () => {
             const div = document.createElement('div');
-            div.className = 'input-group input-group-sm item-foto';
-            div.innerHTML = `<input type="file" name="foto" class="form-control file-input" accept="image/*" required>
-                             <button type="button" class="btn btn-outline-danger btnHapus"><i class="bi bi-trash"></i></button>`;
+            div.className = 'p-2 border rounded-3 bg-white item-foto';
+            div.innerHTML = `
+                <div class="input-group input-group-sm mb-2">
+                    <input type="file" name="foto" class="form-control file-input" accept="image/*" required>
+                    <button type="button" class="btn btn-outline-danger btnHapus"><i class="bi bi-trash"></i> Hapus</button>
+                </div>
+                <div class="preview-container">
+                    <small class="text-muted fst-italic">Belum ada foto dipilih</small>
+                </div>`;
             containerInputFoto.appendChild(div);
             updateHapusButtons();
         });
@@ -260,13 +268,24 @@
             if (btnHapus) {
                 btnHapus.closest('.item-foto').remove();
                 updateHapusButtons();
-                updatePreviews(); 
             }
         });
 
         containerInputFoto.addEventListener('change', (e) => {
             if (e.target.classList.contains('file-input')) {
-                updatePreviews();
+                const itemFoto = e.target.closest('.item-foto');
+                const previewContainer = itemFoto.querySelector('.preview-container');
+                const file = e.target.files[0];
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewContainer.innerHTML = `<img src="${event.target.result}" class="preview-img shadow-sm">`;
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.innerHTML = `<small class="text-muted fst-italic">Belum ada foto dipilih</small>`;
+                }
             }
         });
 
@@ -274,23 +293,6 @@
             const items = containerInputFoto.querySelectorAll('.item-foto');
             items.forEach((item) => {
                 item.querySelector('.btnHapus').disabled = (items.length === 1);
-            });
-        }
-
-        function updatePreviews() {
-            previewGrid.innerHTML = '';
-            const fileInputs = containerInputFoto.querySelectorAll('.file-input');
-            fileInputs.forEach((input) => {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const box = document.createElement('div');
-                        box.className = 'preview-box';
-                        box.innerHTML = `<img src="${e.target.result}" class="preview-img">`;
-                        previewGrid.appendChild(box);
-                    }
-                    reader.readAsDataURL(input.files[0]);
-                }
             });
         }
     </script>
