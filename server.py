@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2 import service_account
 from pypdf import PdfReader # <-- Ditambahkan untuk membaca teks PDF
+from xhtml2pdf import pisa  # <-- [TAMBAHAN BARU] Untuk membuat file PDF laporan
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
@@ -97,6 +98,34 @@ def upload_to_drive(file_storage, kategori):
         print(f"DEBUG ERROR UPLOAD: {e}")
         return None
 
+# --- [TAMBAHAN BARU] Fungsi untuk generate dan upload laporan PDF ke Drive ---
+def generate_and_upload_laporan_pdf(list_data):
+    try:
+        html_content = "<html><body><h2>Laporan Rekapitulasi Perizinan Alat Berat</h2><table border='1' cellspacing='0' cellpadding='5'><tr><th>ID</th><th>Kode</th><th>Pemohon</th><th>Kategori</th><th>Status</th></tr>"
+        for item in list_data:
+            html_content += f"<tr><td>{item['id']}</td><td>{item['kode_unik']}</td><td>{item['pemohon']}</td><td>{item['kategori']}</td><td>{item['status']}</td></tr>"
+        html_content += "</table></body></html>"
+
+        pdf_file = io.BytesIO()
+        pisa_status = pisa.CreatePDF(io.BytesIO(html_content.encode('utf-8')), dest=pdf_file)
+        if pisa_status.err:
+            return None
+        pdf_file.seek(0)
+
+        service = get_drive_service()
+        target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, "Rekap_Laporan")
+        media_body = MediaIoBaseUpload(pdf_file, mimetype='application/pdf', resumable=True)
+        file_metadata = {
+            'name': f'Rekap_Laporan_{pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")}.pdf', 
+            'parents': [target_folder_id]
+        }
+        
+        file = service.files().create(body=file_metadata, media_body=media_body, fields='id').execute()
+        return file.get('id')
+    except Exception as e:
+        print(f"Error saat generate/upload PDF Laporan: {e}")
+        return None
+
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
@@ -150,7 +179,6 @@ def permohonan_masuk_page():
 
 @app.route('/detail-permohonan/<int:id_permohonan>')
 def detail_permohonan_page(id_permohonan):
-    # Diizinkan bagi user yang sudah login (admin maupun user biasa)
     if not session.get('user'):
         return redirect(url_for('login_page'))
     permohonan = next((item for item in data_permohonan if item['id'] == id_permohonan), None)
@@ -208,6 +236,15 @@ def laporan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
     return render_template('laporan.html', list_permohonan=data_permohonan)
+
+# --- [TAMBAHAN BARU] Rute untuk tombol simpan laporan ke drive ---
+@app.route('/export-laporan-drive')
+def export_laporan_drive():
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    
+    generate_and_upload_laporan_pdf(data_permohonan)
+    return redirect(url_for('laporan_page'))
 
 @app.route('/pengguna')
 def pengguna_page():
