@@ -148,6 +148,20 @@ def permohonan_masuk_page():
         return redirect(url_for('login_page'))
     return render_template('permohonan_masuk.html', list_permohonan=data_permohonan)
 
+# --- RUTE TAMBAHAN UNTUK DETAIL PERMOHONAN ---
+@app.route('/detail-permohonan/<int:id_permohonan>')
+def detail_permohonan_page(id_permohonan):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    
+    # Cari data permohonan berdasarkan ID
+    permohonan = next((item for item in data_permohonan if item['id'] == id_permohonan), None)
+    
+    if not permohonan:
+        return "Data permohonan tidak ditemukan", 404
+        
+    return render_template('detail_permohonan.html', permohonan=permohonan)
+
 @app.route('/master-sarana')
 def master_sarana_page():
     if session.get('user') != 'admin':
