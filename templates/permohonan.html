@@ -256,8 +256,9 @@
         });
 
         containerInputFoto.addEventListener('click', (e) => {
-            if (e.target.closest('.btnHapus')) {
-                e.target.closest('.item-foto').remove();
+            const btnHapus = e.target.closest('.btnHapus');
+            if (btnHapus) {
+                btnHapus.closest('.item-foto').remove();
                 updateHapusButtons();
                 updatePreviews(); 
             }
