@@ -7,6 +7,7 @@ from flask import send_file
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2 import service_account
+from pypdf import PdfReader # <-- Ditambahkan untuk membaca teks PDF
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
@@ -41,10 +42,45 @@ def get_or_create_subfolder(service, parent_folder_id, folder_name):
         print(f"Gagal membuat/mencari subfolder di Drive: {e}")
         return parent_folder_id 
 
+# --- FUNGSI BARU: Mendeteksi kategori/nama folder berdasarkan isi PDF ---
+def detect_category_from_pdf(file_storage):
+    try:
+        file_storage.seek(0)
+        reader = PdfReader(file_storage)
+        text = ""
+        for page in reader.pages:
+            extracted = page.extract_text()
+            if extracted:
+                text += extracted.lower()
+        
+        file_storage.seek(0) # Kembalikan posisi pointer file ke awal setelah dibaca
+        
+        # Logika pengecekan kata kunci di dalam PDF
+        if "sarana" in text:
+            return "Sarana"
+        elif "prasarana" in text:
+            return "Prasarana"
+        elif "instalasi" in text:
+            return "Instalasi"
+        elif "peralatan" in text:
+            return "Peralatan"
+        else:
+            return "Laporan_Umum"
+    except Exception as e:
+        print(f"Gagal membaca teks PDF untuk deteksi folder: {e}")
+        file_storage.seek(0)
+        return "Laporan_Lainnya"
+
 def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
-        nama_subfolder = kategori.capitalize()
+        
+        # --- MODIFIKASI: Jika file adalah PDF, tentukan nama subfolder otomatis dari isinya ---
+        if file_storage.filename.lower().endswith('.pdf'):
+            nama_subfolder = detect_category_from_pdf(file_storage)
+        else:
+            nama_subfolder = kategori.capitalize()
+            
         target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, nama_subfolder)
         
         file_storage.seek(0)
