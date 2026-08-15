@@ -7,9 +7,9 @@ from flask import send_file
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2 import service_account
-from pypdf import PdfReader # <-- Ditambahkan untuk membaca teks PDF
-from xhtml2pdf import pisa  # <-- [TAMBAHAN BARU] Untuk membuat file PDF laporan
-from werkzeug.utils import secure_filename # <-- Ditambahkan untuk mengamankan nama file
+from pypdf import PdfReader 
+from xhtml2pdf import pisa  
+from werkzeug.utils import secure_filename 
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
@@ -55,9 +55,8 @@ def detect_category_from_pdf(file_storage):
             if extracted:
                 text += extracted.lower()
         
-        file_storage.seek(0) # Kembalikan posisi pointer file ke awal setelah dibaca
+        file_storage.seek(0) 
         
-        # Logika pengecekan kata kunci di dalam PDF
         if "sarana" in text:
             return "Sarana"
         elif "prasarana" in text:
@@ -303,7 +302,6 @@ def proses_permohonan(kategori):
         files = request.files.getlist(input_name)
         for file in files:
             if file and file.filename != '':
-                # PERBAIKAN: Mengamankan nama file agar terhindar dari path traversal
                 filename = secure_filename(file.filename)
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(save_path)
@@ -314,9 +312,9 @@ def proses_permohonan(kategori):
                 if drive_id:
                     drive_ids.append(drive_id)
                 
-                # PERBAIKAN: Hapus file dari folder lokal setelah sukses terupload ke Drive
-                if os.path.exists(save_path):
-                    os.remove(save_path)
+                # File lokal tidak dihapus agar bisa tampil di halaman detail
+                # if os.path.exists(save_path):
+                #     os.remove(save_path)
                     
     handle_file_upload('foto')
     handle_file_upload('dokumen')
