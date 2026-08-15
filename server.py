@@ -168,7 +168,8 @@ def dashboard_page():
 def admin_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('admin.html')
+    # Diperbaiki agar mengirimkan data_permohonan ke template admin.html
+    return render_template('admin.html', list_permohonan=data_permohonan)
 
 # --- RUTE MENU ADMIN ---
 @app.route('/permohonan-masuk')
