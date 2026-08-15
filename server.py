@@ -9,6 +9,7 @@ from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2 import service_account
 from pypdf import PdfReader # <-- Ditambahkan untuk membaca teks PDF
 from xhtml2pdf import pisa  # <-- [TAMBAHAN BARU] Untuk membuat file PDF laporan
+from werkzeug.utils import secure_filename # <-- Ditambahkan untuk mengamankan nama file
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
@@ -43,7 +44,7 @@ def get_or_create_subfolder(service, parent_folder_id, folder_name):
         print(f"Gagal membuat/mencari subfolder di Drive: {e}")
         return parent_folder_id 
 
-# --- FUNGSI BARU: Mendeteksi kategori/nama folder berdasarkan isi PDF ---
+# --- FUNGSI: Mendeteksi kategori/nama folder berdasarkan isi PDF ---
 def detect_category_from_pdf(file_storage):
     try:
         file_storage.seek(0)
@@ -76,7 +77,6 @@ def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
         
-        # --- MODIFIKASI: Jika file adalah PDF, tentukan nama subfolder otomatis dari isinya ---
         if file_storage.filename.lower().endswith('.pdf'):
             nama_subfolder = detect_category_from_pdf(file_storage)
         else:
@@ -98,7 +98,7 @@ def upload_to_drive(file_storage, kategori):
         print(f"DEBUG ERROR UPLOAD: {e}")
         return None
 
-# --- [TAMBAHAN BARU] Fungsi untuk generate dan upload laporan PDF ke Drive ---
+# --- Fungsi untuk generate dan upload laporan PDF ke Drive ---
 def generate_and_upload_laporan_pdf(list_data):
     try:
         html_content = "<html><body><h2>Laporan Rekapitulasi Perizinan Alat Berat</h2><table border='1' cellspacing='0' cellpadding='5'><tr><th>ID</th><th>Kode</th><th>Pemohon</th><th>Kategori</th><th>Status</th></tr>"
@@ -231,25 +231,21 @@ def master_peralatan_page():
         return redirect(url_for('login_page'))
     return render_template('master_peralatan.html')
 
-# --- RUTE LAPORAN DENGAN FILTER YANG DIPERBARUI ---
+# --- RUTE LAPORAN DENGAN FILTER ---
 @app.route('/laporan')
 def laporan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
     
-    # Menangkap parameter filter dari form GET
     jenis_filter = request.args.get('jenis', 'Semua Jenis')
     status_filter = request.args.get('status', 'Semua Status')
     
-    # Salin data asli untuk disaring
     filtered_data = data_permohonan
     
-    # Filter Berdasarkan Jenis Laporan / Kategori
     if jenis_filter != 'Semua Jenis':
-        kategori_kunci = jenis_filter.split(' ')[0].lower() # Mengambil kata pertama misal "sarana"
+        kategori_kunci = jenis_filter.split(' ')[0].lower() 
         filtered_data = [item for item in filtered_data if item.get('kategori', '').lower() == kategori_kunci]
         
-    # Filter Berdasarkan Status Kelayakan
     if status_filter != 'Semua Status':
         mapping_status = {
             'Layak Digunakan': 'Disetujui',
@@ -261,7 +257,6 @@ def laporan_page():
 
     return render_template('laporan.html', list_permohonan=filtered_data)
 
-# --- [TAMBAHAN BARU] Rute untuk tombol simpan laporan ke drive ---
 @app.route('/export-laporan-drive')
 def export_laporan_drive():
     if session.get('user') != 'admin':
@@ -300,21 +295,32 @@ def permohonan_page(kategori):
 def proses_permohonan(kategori):
     if not session.get('user'):
         return redirect(url_for('login_page'))
+        
     file_list = []
     drive_ids = []
+    
     def handle_file_upload(input_name):
         files = request.files.getlist(input_name)
         for file in files:
             if file and file.filename != '':
-                filename = file.filename
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                # PERBAIKAN: Mengamankan nama file agar terhindar dari path traversal
+                filename = secure_filename(file.filename)
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(save_path)
                 file_list.append(filename)
+                
                 file.seek(0)
                 drive_id = upload_to_drive(file, kategori)
                 if drive_id:
                     drive_ids.append(drive_id)
+                
+                # PERBAIKAN: Hapus file dari folder lokal setelah sukses terupload ke Drive
+                if os.path.exists(save_path):
+                    os.remove(save_path)
+                    
     handle_file_upload('foto')
     handle_file_upload('dokumen')
+    
     permohonan_baru = {
         'id': len(data_permohonan) + 1,
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
