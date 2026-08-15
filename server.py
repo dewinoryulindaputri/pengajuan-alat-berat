@@ -168,7 +168,6 @@ def dashboard_page():
 def admin_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    # Diperbaiki agar mengirimkan data_permohonan ke template admin.html
     return render_template('admin.html', list_permohonan=data_permohonan)
 
 # --- RUTE MENU ADMIN ---
@@ -232,11 +231,35 @@ def master_peralatan_page():
         return redirect(url_for('login_page'))
     return render_template('master_peralatan.html')
 
+# --- RUTE LAPORAN DENGAN FILTER YANG DIPERBARUI ---
 @app.route('/laporan')
 def laporan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('laporan.html', list_permohonan=data_permohonan)
+    
+    # Menangkap parameter filter dari form GET
+    jenis_filter = request.args.get('jenis', 'Semua Jenis')
+    status_filter = request.args.get('status', 'Semua Status')
+    
+    # Salin data asli untuk disaring
+    filtered_data = data_permohonan
+    
+    # Filter Berdasarkan Jenis Laporan / Kategori
+    if jenis_filter != 'Semua Jenis':
+        kategori_kunci = jenis_filter.split(' ')[0].lower() # Mengambil kata pertama misal "sarana"
+        filtered_data = [item for item in filtered_data if item.get('kategori', '').lower() == kategori_kunci]
+        
+    # Filter Berdasarkan Status Kelayakan
+    if status_filter != 'Semua Status':
+        mapping_status = {
+            'Layak Digunakan': 'Disetujui',
+            'Tidak Layak Digunakan': 'Ditolak',
+            'Menunggu Verifikasi': 'Pending'
+        }
+        status_target = mapping_status.get(status_filter)
+        filtered_data = [item for item in filtered_data if item.get('status') == status_target]
+
+    return render_template('laporan.html', list_permohonan=filtered_data)
 
 # --- [TAMBAHAN BARU] Rute untuk tombol simpan laporan ke drive ---
 @app.route('/export-laporan-drive')
