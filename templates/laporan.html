@@ -191,7 +191,8 @@
                                 <td class="fw-bold text-success">{{ item.kode_unik }}</td>
                                 <td>{{ item.pemohon }}</td>
                                 <td class="text-capitalize">{{ item.kategori }}</td>
-                                <td>{{ item.jenis_sarana if item.jenis_sarana else '-' }}</td>
+                                <!-- Kolom Jenis / Unit dibuat dinamis untuk semua kategori -->
+                                <td>{{ item.jenis_sarana or item.nama_prasarana or item.jenis_instalasi or item.jenis_peralatan or '-' }}</td>
                                 <td>
                                     <span class="badge {% if item.status == 'Disetujui' %}bg-success{% elif item.status == 'Pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                                         {{ item.status }}
