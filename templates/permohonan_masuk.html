@@ -73,10 +73,22 @@
                                 <td><span class="badge bg-secondary font-monospace">{{ item.kode_unik }}</span></td>
                                 <td><span class="fw-bold">{{ item.pemohon }}</span></td>
                                 
-                                <!-- BAGIAN DINAMIS SESUAI KATEGORI -->
                                 <td>{{ item.jenis_sarana or item.nama_prasarana or item.jenis_instalasi or item.jenis_peralatan or '-' }}</td>
-                                <td>{{ item.no_lambung or item.tahun_konstruksi or '-' }}</td>
-                                <td>{{ item.no_polisi or item.koordinat or '-' }}</td>
+                                
+                                <td>
+                                    {% if item.kategori == 'peralatan' %}
+                                        {{ item.kapasitas or '-' }}
+                                    {% else %}
+                                        {{ item.no_lambung or item.tahun_konstruksi or '-' }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.kategori == 'peralatan' %}
+                                        {{ item.merk or '-' }} / {{ item.tipe or '-' }}
+                                    {% else %}
+                                        {{ item.no_polisi or item.koordinat or '-' }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ item.instansi or item.lokasi or '-' }}</td>
 
                                 <td>
@@ -89,7 +101,6 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <!-- Tombol Detail menuju halaman pemeriksaan foto dan spesifikasi -->
                                     <a href="/detail-permohonan/{{ item.id }}" class="btn btn-sm btn-outline-primary fw-bold mb-1" title="Lihat Detail">
                                         <i class="bi bi-eye"></i> Detail
                                     </a>
