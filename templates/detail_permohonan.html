@@ -27,21 +27,29 @@
                         <p><strong>Nama Prasarana:</strong> {{ permohonan.nama_prasarana or '-' }}</p>
                         <p><strong>Lokasi:</strong> {{ permohonan.lokasi or '-' }}</p>
                         <p><strong>Koordinat:</strong> {{ permohonan.koordinat or '-' }}</p>
+                        <p><strong>Tahun Konstruksi:</strong> {{ permohonan.tahun_konstruksi or '-' }}</p>
                     
                     {% elif permohonan.kategori == 'sarana' %}
                         <p><strong>Instansi:</strong> {{ permohonan.instansi or '-' }}</p>
                         <p><strong>Jenis Sarana:</strong> {{ permohonan.jenis_sarana or '-' }}</p>
+                        <p><strong>Merk / Tipe:</strong> {{ permohonan.merk or '-' }} / {{ permohonan.tipe or '-' }}</p>
                         <p><strong>No. Lambung:</strong> {{ permohonan.no_lambung or '-' }}</p>
                         <p><strong>No. Polisi:</strong> {{ permohonan.no_polisi or '-' }}</p>
+                        <p><strong>Kapasitas Orang:</strong> {{ permohonan.kapasitas_orang or '-' }}</p>
+
+                    {% elif permohonan.kategori == 'instalasi' %}
+                        <p><strong>Jenis Instalasi:</strong> {{ permohonan.jenis_instalasi or '-' }}</p>
+                        <p><strong>Lokasi:</strong> {{ permohonan.lokasi or '-' }}</p>
+                        <p><strong>Kapasitas:</strong> {{ permohonan.kapasitas or '-' }}</p>
 
                     {% elif permohonan.kategori == 'peralatan' %}
                         <p><strong>Jenis Peralatan:</strong> {{ permohonan.jenis_peralatan or '-' }}</p>
                         <p><strong>Merk / Tipe:</strong> {{ permohonan.merk or '-' }} / {{ permohonan.tipe or '-' }}</p>
+                        <p><strong>Kapasitas:</strong> {{ permohonan.kapasitas or '-' }}</p>
                     {% endif %}
                 </div>
 
                 <div class="col-md-6">
-                    <p><strong>Kapasitas:</strong> {{ permohonan.kapasitas or '-' }}</p>
                     <p><strong>Catatan:</strong> {{ permohonan.catatan or '-' }}</p>
                     <p><strong>Status:</strong> 
                         {% if permohonan.status == 'Pending' %}

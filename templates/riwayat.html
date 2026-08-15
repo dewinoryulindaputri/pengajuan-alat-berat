@@ -77,8 +77,33 @@
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td><span class="badge bg-secondary font-monospace">{{ item.kode_unik }}</span></td>
-                                <td class="fw-bold">{{ item.jenis_sarana }} <br> <small class="text-muted">No. Lambung: {{ item.no_lambung }}</small></td>
-                                <td>{{ item.instansi }}</td>
+                                
+                                <!-- DINAMIS SESUAI KATEGORI -->
+                                <td>
+                                    {% if item.kategori == 'prasarana' %}
+                                        <strong class="text-dark">{{ item.nama_prasarana or 'Prasarana' }}</strong><br>
+                                        <small class="text-muted">Jenis: {{ item.jenis_prasarana or '-' }}</small>
+                                    {% elif item.kategori == 'sarana' %}
+                                        <strong class="text-dark">{{ item.jenis_sarana or 'Sarana' }}</strong><br>
+                                        <small class="text-muted">No. Lambung: {{ item.no_lambung or '-' }}</small>
+                                    {% elif item.kategori == 'instalasi' %}
+                                        <strong class="text-dark">{{ item.jenis_instalasi or 'Instalasi' }}</strong><br>
+                                        <small class="text-muted">Lokasi: {{ item.lokasi or '-' }}</small>
+                                    {% else %}
+                                        <strong class="text-dark">{{ item.jenis_peralatan or item.merk or 'Peralatan' }}</strong><br>
+                                        <small class="text-muted">Tipe: {{ item.tipe or '-' }}</small>
+                                    {% endif %}
+                                </td>
+                                
+                                <!-- INSTANSI / LOKASI DINAMIS -->
+                                <td>
+                                    {% if item.kategori == 'prasarana' or item.kategori == 'instalasi' %}
+                                        {{ item.lokasi or '-' }}
+                                    {% else %}
+                                        {{ item.instansi or '-' }}
+                                    {% endif %}
+                                </td>
+
                                 <td>
                                     {% if item.status == 'Pending' %}
                                         <span class="badge badge-menunggu px-2 py-1">Menunggu Verifikasi</span>
