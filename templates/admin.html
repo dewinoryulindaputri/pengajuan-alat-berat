@@ -66,15 +66,13 @@
             </div>
             <ul class="nav flex-column">
                 <li class="nav-item"><a href="/admin" class="nav-link active mb-1"><i class="bi bi-grid-fill me-2"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="/permohonan-masuk" class="nav-link mb-1"><i class="bi bi-file-earmark-text me-2"></i> Permohonan Masuk <span class="badge bg-danger float-end">0</span></a></li>
+                <li class="nav-item"><a href="/permohonan-masuk" class="nav-link mb-1"><i class="bi bi-file-earmark-text me-2"></i> Permohonan Masuk <span class="badge bg-danger float-end">{{ list_permohonan | selectattr('status', 'equalto', 'Pending') | list | length if list_permohonan else 0 }}</span></a></li>
                 <li class="nav-item"><a href="/master-sarana" class="nav-link mb-1"><i class="bi bi-truck me-2"></i> Master Sarana</a></li>
                 <li class="nav-item"><a href="/master-prasarana" class="nav-link mb-1"><i class="bi bi-buildings me-2"></i> Master Prasarana</a></li>
                 <li class="nav-item"><a href="/master-instalasi" class="nav-link mb-1"><i class="bi bi-gear me-2"></i> Master Instalasi</a></li>
                 <li class="nav-item"><a href="/master-peralatan" class="nav-link mb-1"><i class="bi bi-tools me-2"></i> Master Peralatan</a></li>
                 <li class="nav-item"><a href="/laporan" class="nav-link mb-1"><i class="bi bi-bar-chart-line me-2"></i> Laporan</a></li>
-                <!-- DIPERBAIKI: Mengarahkan ke rute /pengguna -->
                 <li class="nav-item"><a href="/pengguna" class="nav-link mb-1"><i class="bi bi-people me-2"></i> Pengguna</a></li>
-                <!-- DIPERBAIKI: Mengarahkan ke rute /pengaturan -->
                 <li class="nav-item"><a href="/pengaturan" class="nav-link mb-1"><i class="bi bi-sliders me-2"></i> Pengaturan</a></li>
             </ul>
         </div>
@@ -90,7 +88,7 @@
         <!-- Header Banner -->
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
             <div>
-                <h4 class="fw-bold mb-1 text-dark">Selamat datang, Admin </h4>
+                <h4 class="fw-bold mb-1 text-dark">Selamat datang, Admin</h4>
                 <p class="text-muted small mb-0">Kelola dan verifikasi permohonan perizinan alat berat dengan mudah.</p>
             </div>
             <div class="d-flex align-items-center gap-3">
@@ -111,25 +109,25 @@
             <div class="col-md-3">
                 <div class="card-stat p-3 border-start border-4 border-primary">
                     <small class="text-muted fw-bold">Total Permohonan</small>
-                    <h2 class="fw-bold mt-2 mb-0 text-dark">12</h2>
+                    <h2 class="fw-bold mt-2 mb-0 text-dark">{{ list_permohonan | length if list_permohonan else 0 }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card-stat p-3 border-start border-4 border-warning">
                     <small class="text-muted fw-bold">Menunggu Verifikasi</small>
-                    <h2 class="fw-bold mt-2 mb-0 text-dark">5</h2>
+                    <h2 class="fw-bold mt-2 mb-0 text-dark">{{ list_permohonan | selectattr('status', 'equalto', 'Pending') | list | length if list_permohonan else 0 }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card-stat p-3 border-start border-4 border-success">
                     <small class="text-muted fw-bold">Layak Digunakan</small>
-                    <h2 class="fw-bold mt-2 mb-0 text-dark">4</h2>
+                    <h2 class="fw-bold mt-2 mb-0 text-dark">{{ list_permohonan | selectattr('status', 'equalto', 'Disetujui') | list | length if list_permohonan else 0 }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card-stat p-3 border-start border-4 border-danger">
                     <small class="text-muted fw-bold">Tidak Layak Digunakan</small>
-                    <h2 class="fw-bold mt-2 mb-0 text-dark">3</h2>
+                    <h2 class="fw-bold mt-2 mb-0 text-dark">{{ list_permohonan | selectattr('status', 'equalto', 'Ditolak') | list | length if list_permohonan else 0 }}</h2>
                 </div>
             </div>
         </div>
@@ -149,54 +147,38 @@
                             <thead class="table-light small">
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama Alat / Unit</th>
-                                    <th>Jenis</th>
-                                    <th>Tanggal</th>
+                                    <th>Kode Unik / Unit</th>
+                                    <th>Kategori</th>
+                                    <th>Pemohon</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr>
-                                    <td>1</td>
-                                    <td class="fw-bold">Excavator PC200</td>
-                                    <td>Sarana</td>
-                                    <td>06/08/2026</td>
-                                    <td><span class="badge badge-menunggu px-2 py-1">Menunggu</span></td>
-                                    <td><a href="/detail-permohonan" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td class="fw-bold">Bulldozer D6R</td>
-                                    <td>Sarana</td>
-                                    <td>01/08/2026</td>
-                                    <td><span class="badge badge-menunggu px-2 py-1">Menunggu</span></td>
-                                    <td><a href="/detail-permohonan" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td class="fw-bold">Gedung Workshop</td>
-                                    <td>Prasarana</td>
-                                    <td>04/08/2026</td>
-                                    <td><span class="badge badge-menunggu px-2 py-1">Menunggu</span></td>
-                                    <td><a href="/detail-permohonan" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td class="fw-bold">Instalasi Batching Plant</td>
-                                    <td>Instalasi</td>
-                                    <td>03/08/2026</td>
-                                    <td><span class="badge badge-menunggu px-2 py-1">Menunggu</span></td>
-                                    <td><a href="/detail-permohonan" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td class="fw-bold">Genset 500 KVA</td>
-                                    <td>Peralatan</td>
-                                    <td>02/08/2026</td>
-                                    <td><span class="badge badge-menunggu px-2 py-1">Menunggu</span></td>
-                                    <td><a href="/detail-permohonan" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
-                                </tr>
+                                {% if list_permohonan %}
+                                    {% for item in list_permohonan[:5] %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td class="fw-bold">{{ item.merk if item.merk else item.kode_unik }}</td>
+                                        <td>{{ item.kategori }}</td>
+                                        <td>{{ item.pemohon }}</td>
+                                        <td>
+                                            {% if item.status == 'Pending' %}
+                                                <span class="badge badge-menunggu px-2 py-1">Menunggu</span>
+                                            {% elif item.status == 'Disetujui' %}
+                                                <span class="badge badge-layak px-2 py-1">Disetujui</span>
+                                            {% else %}
+                                                <span class="badge badge-tidak-layak px-2 py-1">Ditolak</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><a href="/permohonan-masuk" class="btn btn-sm btn-outline-success py-0 px-2">Detail</a></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">Belum ada data permohonan masuk.</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -209,25 +191,25 @@
                     <div>
                         <h5 class="fw-bold mb-3 text-dark text-start">Status Kelayakan</h5>
                         <hr>
-                        <!-- Simulasi Grafik Donat Sesuai Gambar -->
+                        <!-- Simulasi Angka Total -->
                         <div class="my-4 position-relative d-inline-flex justify-content-center align-items-center">
                             <div style="width: 140px; height: 140px; border-radius: 50%; border: 12px solid #198754; border-top-color: #dc3545; border-right-color: #ffc107; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                <span class="fw-bold fs-4">12</span>
-                                <small class="text-muted" style="font-size: 11px;">Total 12</small>
+                                <span class="fw-bold fs-4">{{ list_permohonan | length if list_permohonan else 0 }}</span>
+                                <small class="text-muted" style="font-size: 11px;">Total</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Keterangan Warna Grafik -->
+                    <!-- Keterangan Warna Grafik Dinamis -->
                     <div class="text-start small mt-3">
                         <div class="d-flex align-items-center mb-1">
-                            <span class="badge bg-success rounded-circle p-1 me-2">&nbsp;</span> Layak (4)
+                            <span class="badge bg-success rounded-circle p-1 me-2">&nbsp;</span> Layak ({{ list_permohonan | selectattr('status', 'equalto', 'Disetujui') | list | length if list_permohonan else 0 }})
                         </div>
                         <div class="d-flex align-items-center mb-1">
-                            <span class="badge bg-danger rounded-circle p-1 me-2">&nbsp;</span> Tidak Layak (2)
+                            <span class="badge bg-danger rounded-circle p-1 me-2">&nbsp;</span> Tidak Layak ({{ list_permohonan | selectattr('status', 'equalto', 'Ditolak') | list | length if list_permohonan else 0 }})
                         </div>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-warning rounded-circle p-1 me-2">&nbsp;</span> Menunggu (6)
+                            <span class="badge bg-warning rounded-circle p-1 me-2">&nbsp;</span> Menunggu ({{ list_permohonan | selectattr('status', 'equalto', 'Pending') | list | length if list_permohonan else 0 }})
                         </div>
                     </div>
                 </div>
