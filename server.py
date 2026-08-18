@@ -146,12 +146,27 @@ def do_login():
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
     session.clear() 
+    
     if username == 'admin' and password == '12345':
         session['user'] = 'admin'
         session['nama'] = 'Administrator'
     else:
+        nama_aktif = username if username else 'User'
         session['user'] = 'user'
-        session['nama'] = username if username else 'User'
+        session['nama'] = nama_aktif
+        
+        # Mengecek apakah user sudah ada di data_pengguna
+        sudah_ada = any(p['nama'].lower() == nama_aktif.lower() for p in data_pengguna)
+        
+        # Jika belum ada, tambahkan ke list pengguna agar muncul di admin
+        if not sudah_ada:
+            data_pengguna.append({
+                'id': len(data_pengguna) + 1,
+                'nama': nama_aktif,
+                'email': f"{nama_aktif.lower().replace(' ', '')}@perizinan.com",
+                'role': 'User Pemohon'
+            })
+            
     return redirect(url_for('dashboard_page'))
 
 @app.route('/dashboard')
