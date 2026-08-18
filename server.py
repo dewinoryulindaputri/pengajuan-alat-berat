@@ -160,7 +160,43 @@ def dashboard_page():
     if role == 'admin':
         return redirect(url_for('admin_page'))
     elif role == 'user':
-        return render_template('index.html')
+        current_user = session.get('nama', 'User')
+        
+        # Ambil data permohonan khusus user yang sedang login
+        user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
+        
+        # Hitung statistik permohonan
+        total_diajukan = len(user_permohonan)
+        total_menunggu = sum(1 for item in user_permohonan if item['status'] == 'Pending')
+        total_disetujui = sum(1 for item in user_permohonan if item['status'] == 'Disetujui')
+        total_ditolak = sum(1 for item in user_permohonan if item['status'] == 'Ditolak')
+        
+        # Ambil permohonan terbaru untuk ditampilkan di tabel
+        permohonan_terbaru = user_permohonan[::-1][:5]
+        formatted_terbaru = []
+        for idx, item in enumerate(permohonan_terbaru):
+            nama_alat = (
+                item.get('jenis_sarana') or 
+                item.get('jenis_prasarana') or 
+                item.get('jenis_instalasi') or 
+                item.get('jenis_peralatan') or 
+                'Unit / Alat'
+            )
+            formatted_terbaru.append({
+                'no': idx + 1,
+                'nama_alat': f"{item.get('kode_unik', 'REQ')} - {nama_alat}",
+                'tanggal': 'Baru saja',
+                'status': 'Disetujui' if item['status'] == 'Disetujui' else ('Ditolak' if item['status'] == 'Ditolak' else 'Menunggu')
+            })
+
+        return render_template(
+            'index.html',
+            total_diajukan=total_diajukan,
+            total_menunggu=total_menunggu,
+            total_disetujui=total_disetujui,
+            total_ditolak=total_ditolak,
+            permohonan_terbaru=formatted_terbaru
+        )
     return redirect(url_for('login_page'))
 
 @app.route('/admin')
@@ -312,10 +348,6 @@ def proses_permohonan(kategori):
                 if drive_id:
                     drive_ids.append(drive_id)
                 
-                # File lokal tidak dihapus agar bisa tampil di halaman detail
-                # if os.path.exists(save_path):
-                #     os.remove(save_path)
-                    
     handle_file_upload('foto')
     handle_file_upload('dokumen')
     

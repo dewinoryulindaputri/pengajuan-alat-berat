@@ -104,25 +104,25 @@
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card card-stat p-3 bg-white border-start border-4 border-primary">
-                    <h3 class="fw-bold mb-0 text-primary">0</h3>
+                    <h3 class="fw-bold mb-0 text-primary">{{ total_diajukan | default(0) }}</h3>
                     <small class="text-muted">Permohonan Diajukan</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-stat p-3 bg-white border-start border-4 border-warning">
-                    <h3 class="fw-bold mb-0 text-warning">0</h3>
+                    <h3 class="fw-bold mb-0 text-warning">{{ total_menunggu | default(0) }}</h3>
                     <small class="text-muted">Menunggu Verifikasi</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-stat p-3 bg-white border-start border-4 border-success">
-                    <h3 class="fw-bold mb-0 text-success">0</h3>
+                    <h3 class="fw-bold mb-0 text-success">{{ total_disetujui | default(0) }}</h3>
                     <small class="text-muted">Disetujui</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-stat p-3 bg-white border-start border-4 border-danger">
-                    <h3 class="fw-bold mb-0 text-danger">0</h3>
+                    <h3 class="fw-bold mb-0 text-danger">{{ total_ditolak | default(0) }}</h3>
                     <small class="text-muted">Ditolak</small>
                 </div>
             </div>
@@ -185,9 +185,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-3">Belum ada permohonan baru.</td>
-                                </tr>
+                                {% if permohonan_terbaru %}
+                                    {% for item in permohonan_terbaru %}
+                                    <tr>
+                                        <td>{{ item.no }}</td>
+                                        <td>{{ item.nama_alat }}</td>
+                                        <td>{{ item.tanggal }}</td>
+                                        <td>
+                                            {% if item.status == 'Disetujui' %}
+                                                <span class="badge bg-success">Disetujui</span>
+                                            {% elif item.status == 'Ditolak' %}
+                                                <span class="badge bg-danger">Ditolak</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Menunggu</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">Belum ada permohonan baru.</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
