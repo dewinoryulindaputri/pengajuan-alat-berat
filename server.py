@@ -143,6 +143,7 @@ def login_page():
 
 @app.route('/login', methods=['POST'])
 def do_login():
+    global data_pengguna
     # Mendukung input dari form HTML baik 'username' maupun 'nama'
     username = request.form.get('username', '').strip() or request.form.get('nama', '').strip()
     password = request.form.get('password', '').strip()
