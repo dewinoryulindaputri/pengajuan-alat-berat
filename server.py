@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2 import service_account
 from pypdf import PdfReader 
-from xhtml2pdf import pisa  
+from xhtml2pdf import pisa   
 from werkzeug.utils import secure_filename 
 
 app = Flask(__name__)
@@ -132,7 +132,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 data_permohonan = []
 data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
-# Variabel data_pengguna diperbarui untuk memastikan data muncul di tabel
+
 data_pengguna = [
     {'id': 1, 'nama': 'Super Administrator', 'email': 'admin@perizinan.com', 'role': 'Administrator'},
     {'id': 2, 'nama': 'Petugas Verifikasi', 'email': 'petugas@perizinan.com', 'role': 'Petugas'}
@@ -305,7 +305,6 @@ def export_laporan_drive():
 def pengguna_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    # Diperbarui menggunakan data_pengguna agar sinkron dengan template
     return render_template('pengguna.html', data_pengguna=data_pengguna)
 
 @app.route('/pengaturan')
