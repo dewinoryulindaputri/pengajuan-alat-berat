@@ -143,11 +143,12 @@ def login_page():
 
 @app.route('/login', methods=['POST'])
 def do_login():
-    username = request.form.get('username', '').strip()
+    # Mendukung input dari form HTML baik 'username' maupun 'nama'
+    username = request.form.get('username', '').strip() or request.form.get('nama', '').strip()
     password = request.form.get('password', '').strip()
     session.clear() 
     
-    if username == 'admin' and password == '12345':
+    if username.lower() == 'admin' and password == '12345':
         session['user'] = 'admin'
         session['nama'] = 'Administrator'
     else:
@@ -155,7 +156,7 @@ def do_login():
         session['user'] = 'user'
         session['nama'] = nama_aktif
         
-        # Mengecek apakah user sudah ada di data_pengguna
+        # Mengecek apakah user sudah ada di data_pengguna (case-insensitive)
         sudah_ada = any(p['nama'].lower() == nama_aktif.lower() for p in data_pengguna)
         
         # Jika belum ada, tambahkan ke list pengguna agar muncul di admin
