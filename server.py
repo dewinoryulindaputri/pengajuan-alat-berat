@@ -132,6 +132,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 data_permohonan = []
 data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
+# Variabel data_pengguna diperbarui untuk memastikan data muncul di tabel
 data_pengguna = [
     {'id': 1, 'nama': 'Super Administrator', 'email': 'admin@perizinan.com', 'role': 'Administrator'},
     {'id': 2, 'nama': 'Petugas Verifikasi', 'email': 'petugas@perizinan.com', 'role': 'Petugas'}
@@ -144,7 +145,6 @@ def login_page():
 @app.route('/login', methods=['POST'])
 def do_login():
     global data_pengguna
-    # Mendukung input dari form HTML baik 'username' maupun 'nama'
     username = request.form.get('username', '').strip() or request.form.get('nama', '').strip()
     password = request.form.get('password', '').strip()
     session.clear() 
@@ -157,10 +157,8 @@ def do_login():
         session['user'] = 'user'
         session['nama'] = nama_aktif
         
-        # Mengecek apakah user sudah ada di data_pengguna (case-insensitive)
         sudah_ada = any(p['nama'].lower() == nama_aktif.lower() for p in data_pengguna)
         
-        # Jika belum ada, tambahkan ke list pengguna agar muncul di admin
         if not sudah_ada:
             data_pengguna.append({
                 'id': len(data_pengguna) + 1,
@@ -178,17 +176,12 @@ def dashboard_page():
         return redirect(url_for('admin_page'))
     elif role == 'user':
         current_user = session.get('nama', 'User')
-        
-        # Ambil data permohonan khusus user yang sedang login
         user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
-        
-        # Hitung statistik permohonan
         total_diajukan = len(user_permohonan)
         total_menunggu = sum(1 for item in user_permohonan if item['status'] == 'Pending')
         total_disetujui = sum(1 for item in user_permohonan if item['status'] == 'Disetujui')
         total_ditolak = sum(1 for item in user_permohonan if item['status'] == 'Ditolak')
         
-        # Ambil permohonan terbaru untuk ditampilkan di tabel
         permohonan_terbaru = user_permohonan[::-1][:5]
         formatted_terbaru = []
         for idx, item in enumerate(permohonan_terbaru):
@@ -222,7 +215,6 @@ def admin_page():
         return redirect(url_for('login_page'))
     return render_template('admin.html', list_permohonan=data_permohonan)
 
-# --- RUTE MENU ADMIN ---
 @app.route('/permohonan-masuk')
 def permohonan_masuk_page():
     if session.get('user') != 'admin':
@@ -238,7 +230,6 @@ def detail_permohonan_page(id_permohonan):
         return "Data permohonan tidak ditemukan", 404
     return render_template('detail_permohonan.html', permohonan=permohonan)
 
-# --- RUTE SETUJUI & TOLAK ---
 @app.route('/setujui/<int:id_permohonan>')
 def setujui_permohonan(id_permohonan):
     if session.get('user') != 'admin':
@@ -283,21 +274,16 @@ def master_peralatan_page():
         return redirect(url_for('login_page'))
     return render_template('master_peralatan.html')
 
-# --- RUTE LAPORAN DENGAN FILTER ---
 @app.route('/laporan')
 def laporan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    
     jenis_filter = request.args.get('jenis', 'Semua Jenis')
     status_filter = request.args.get('status', 'Semua Status')
-    
     filtered_data = data_permohonan
-    
     if jenis_filter != 'Semua Jenis':
         kategori_kunci = jenis_filter.split(' ')[0].lower() 
         filtered_data = [item for item in filtered_data if item.get('kategori', '').lower() == kategori_kunci]
-        
     if status_filter != 'Semua Status':
         mapping_status = {
             'Layak Digunakan': 'Disetujui',
@@ -306,14 +292,12 @@ def laporan_page():
         }
         status_target = mapping_status.get(status_filter)
         filtered_data = [item for item in filtered_data if item.get('status') == status_target]
-
     return render_template('laporan.html', list_permohonan=filtered_data)
 
 @app.route('/export-laporan-drive')
 def export_laporan_drive():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    
     generate_and_upload_laporan_pdf(data_permohonan)
     return redirect(url_for('laporan_page'))
 
@@ -321,7 +305,8 @@ def export_laporan_drive():
 def pengguna_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('pengguna.html', list_pengguna=data_pengguna)
+    # Diperbarui menggunakan data_pengguna agar sinkron dengan template
+    return render_template('pengguna.html', data_pengguna=data_pengguna)
 
 @app.route('/pengaturan')
 def pengaturan_page():
@@ -347,10 +332,8 @@ def permohonan_page(kategori):
 def proses_permohonan(kategori):
     if not session.get('user'):
         return redirect(url_for('login_page'))
-        
     file_list = []
     drive_ids = []
-    
     def handle_file_upload(input_name):
         files = request.files.getlist(input_name)
         for file in files:
@@ -359,15 +342,12 @@ def proses_permohonan(kategori):
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(save_path)
                 file_list.append(filename)
-                
                 file.seek(0)
                 drive_id = upload_to_drive(file, kategori)
                 if drive_id:
                     drive_ids.append(drive_id)
-                
     handle_file_upload('foto')
     handle_file_upload('dokumen')
-    
     permohonan_baru = {
         'id': len(data_permohonan) + 1,
         'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
