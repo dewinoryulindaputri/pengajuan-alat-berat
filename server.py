@@ -133,7 +133,13 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # --- KONFIGURASI DATABASE SQLITE ---
-DB_FILE = 'database.db'
+# Kalau folder /app/data ada (artinya Volume Railway sudah dipasang & di-mount di situ),
+# simpan database.db di sana supaya persisten antar redeploy.
+# Kalau tidak ada (misal saat dijalankan di laptop/lokal), tetap pakai folder project seperti biasa.
+if os.path.isdir('/app/data'):
+    DB_FILE = '/app/data/database.db'
+else:
+    DB_FILE = 'database.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
