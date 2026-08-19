@@ -78,10 +78,11 @@ def upload_to_drive(file_storage, kategori):
     try:
         service = get_drive_service()
         
-        if file_storage.filename.lower().endswith('.pdf'):
-            nama_subfolder = detect_category_from_pdf(file_storage)
-        else:
-            nama_subfolder = kategori.capitalize()
+        # Selalu pakai kategori yang dipilih user di form (sarana/prasarana/instalasi/peralatan)
+        # sebagai nama folder tujuan, baik file berupa PDF, foto, maupun tipe lainnya.
+        # Ini lebih akurat dibanding menebak dari isi teks PDF, apalagi PDF sering
+        # berisi foto/scan yang tidak punya teks untuk dibaca.
+        nama_subfolder = kategori.capitalize()
             
         target_folder_id = get_or_create_subfolder(service, GOOGLE_DRIVE_FOLDER_ID, nama_subfolder)
         
