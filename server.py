@@ -10,6 +10,8 @@ from google.oauth2 import service_account
 from pypdf import PdfReader 
 from xhtml2pdf import pisa   
 from werkzeug.utils import secure_filename 
+import sqlite3
+import json
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_spip'
@@ -130,13 +132,118 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-data_permohonan = []
-data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
+# --- KONFIGURASI DATABASE SQLITE ---
+DB_FILE = 'database.db'
 
-data_pengguna = [
-    {'id': 1, 'nama': 'Super Administrator', 'email': 'admin@perizinan.com', 'role': 'Administrator'},
-    {'id': 2, 'nama': 'Petugas Verifikasi', 'email': 'petugas@perizinan.com', 'role': 'Petugas'}
-]
+def get_db_connection():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS pengguna (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama TEXT NOT NULL,
+            email TEXT,
+            role TEXT
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS permohonan (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            kode_unik TEXT, pemohon TEXT, kategori TEXT,
+            jenis_sarana TEXT, jenis_prasarana TEXT, jenis_instalasi TEXT, jenis_peralatan TEXT,
+            tahun_pembuatan TEXT, kapasitas_orang TEXT, no_lambung TEXT, no_polisi TEXT,
+            merk TEXT, tipe TEXT, nomer_mesin TEXT, nomer_rangka TEXT, nomer_stnk TEXT,
+            instansi TEXT, nama_prasarana TEXT, tahun_konstruksi TEXT, lokasi TEXT, koordinat TEXT,
+            tahun TEXT, kapasitas TEXT, no_sertifikat TEXT, tgl_berlaku TEXT, tgl_berakhir TEXT,
+            catatan TEXT, status TEXT, foto TEXT, foto_drive_ids TEXT
+        )
+    ''')
+    if conn.execute('SELECT COUNT(*) FROM pengguna').fetchone()[0] == 0:
+        conn.execute("INSERT INTO pengguna (nama, email, role) VALUES (?, ?, ?)",
+                     ('Super Administrator', 'admin@perizinan.com', 'Administrator'))
+        conn.execute("INSERT INTO pengguna (nama, email, role) VALUES (?, ?, ?)",
+                     ('Petugas Verifikasi', 'petugas@perizinan.com', 'Petugas'))
+    conn.commit()
+    conn.close()
+
+def get_all_pengguna():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM pengguna').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def cek_pengguna_ada(nama):
+    conn = get_db_connection()
+    row = conn.execute('SELECT id FROM pengguna WHERE LOWER(nama) = LOWER(?)', (nama,)).fetchone()
+    conn.close()
+    return row is not None
+
+def add_pengguna(nama, email, role):
+    conn = get_db_connection()
+    conn.execute('INSERT INTO pengguna (nama, email, role) VALUES (?, ?, ?)', (nama, email, role))
+    conn.commit()
+    conn.close()
+
+def _row_to_permohonan(row):
+    item = dict(row)
+    item['foto'] = json.loads(item['foto']) if item['foto'] else []
+    item['foto_drive_ids'] = json.loads(item['foto_drive_ids']) if item['foto_drive_ids'] else []
+    return item
+
+def get_all_permohonan():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM permohonan ORDER BY id').fetchall()
+    conn.close()
+    return [_row_to_permohonan(r) for r in rows]
+
+def get_permohonan_by_id(id_permohonan):
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM permohonan WHERE id = ?', (id_permohonan,)).fetchone()
+    conn.close()
+    return _row_to_permohonan(row) if row else None
+
+def get_permohonan_by_pemohon(nama_pemohon):
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM permohonan WHERE pemohon = ? ORDER BY id', (nama_pemohon,)).fetchall()
+    conn.close()
+    return [_row_to_permohonan(r) for r in rows]
+
+def add_permohonan(data):
+    conn = get_db_connection()
+    cursor = conn.execute('''
+        INSERT INTO permohonan (
+            kode_unik, pemohon, kategori, jenis_sarana, jenis_prasarana, jenis_instalasi, jenis_peralatan,
+            tahun_pembuatan, kapasitas_orang, no_lambung, no_polisi, merk, tipe, nomer_mesin, nomer_rangka,
+            nomer_stnk, instansi, nama_prasarana, tahun_konstruksi, lokasi, koordinat, tahun, kapasitas,
+            no_sertifikat, tgl_berlaku, tgl_berakhir, catatan, status, foto, foto_drive_ids
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        'TEMP', data['pemohon'], data['kategori'], data['jenis_sarana'], data['jenis_prasarana'],
+        data['jenis_instalasi'], data['jenis_peralatan'], data['tahun_pembuatan'], data['kapasitas_orang'],
+        data['no_lambung'], data['no_polisi'], data['merk'], data['tipe'], data['nomer_mesin'],
+        data['nomer_rangka'], data['nomer_stnk'], data['instansi'], data['nama_prasarana'],
+        data['tahun_konstruksi'], data['lokasi'], data['koordinat'], data['tahun'], data['kapasitas'],
+        data['no_sertifikat'], data['tgl_berlaku'], data['tgl_berakhir'], data['catatan'], data['status'],
+        json.dumps(data['foto']), json.dumps(data['foto_drive_ids'])
+    ))
+    new_id = cursor.lastrowid
+    conn.execute('UPDATE permohonan SET kode_unik = ? WHERE id = ?', (f"REQ-{new_id:03d}", new_id))
+    conn.commit()
+    conn.close()
+
+def update_status_permohonan(id_permohonan, status):
+    conn = get_db_connection()
+    conn.execute('UPDATE permohonan SET status = ? WHERE id = ?', (status, id_permohonan))
+    conn.commit()
+    conn.close()
+
+init_db()
+
+data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
 
 @app.route('/')
 def login_page():
@@ -144,7 +251,6 @@ def login_page():
 
 @app.route('/login', methods=['POST'])
 def do_login():
-    global data_pengguna
     username = request.form.get('username', '').strip() or request.form.get('nama', '').strip()
     password = request.form.get('password', '').strip()
     session.clear() 
@@ -157,15 +263,12 @@ def do_login():
         session['user'] = 'user'
         session['nama'] = nama_aktif
         
-        sudah_ada = any(p['nama'].lower() == nama_aktif.lower() for p in data_pengguna)
-        
-        if not sudah_ada:
-            data_pengguna.append({
-                'id': len(data_pengguna) + 1,
-                'nama': nama_aktif,
-                'email': f"{nama_aktif.lower().replace(' ', '')}@perizinan.com",
-                'role': 'User Pemohon'
-            })
+        if not cek_pengguna_ada(nama_aktif):
+            add_pengguna(
+                nama_aktif,
+                f"{nama_aktif.lower().replace(' ', '')}@perizinan.com",
+                'User Pemohon'
+            )
             
     return redirect(url_for('dashboard_page'))
 
@@ -176,7 +279,7 @@ def dashboard_page():
         return redirect(url_for('admin_page'))
     elif role == 'user':
         current_user = session.get('nama', 'User')
-        user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
+        user_permohonan = get_permohonan_by_pemohon(current_user)
         total_diajukan = len(user_permohonan)
         total_menunggu = sum(1 for item in user_permohonan if item['status'] == 'Pending')
         total_disetujui = sum(1 for item in user_permohonan if item['status'] == 'Disetujui')
@@ -213,19 +316,19 @@ def dashboard_page():
 def admin_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('admin.html', list_permohonan=data_permohonan)
+    return render_template('admin.html', list_permohonan=get_all_permohonan())
 
 @app.route('/permohonan-masuk')
 def permohonan_masuk_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('permohonan_masuk.html', list_permohonan=data_permohonan)
+    return render_template('permohonan_masuk.html', list_permohonan=get_all_permohonan())
 
 @app.route('/detail-permohonan/<int:id_permohonan>')
 def detail_permohonan_page(id_permohonan):
     if not session.get('user'):
         return redirect(url_for('login_page'))
-    permohonan = next((item for item in data_permohonan if item['id'] == id_permohonan), None)
+    permohonan = get_permohonan_by_id(id_permohonan)
     if not permohonan:
         return "Data permohonan tidak ditemukan", 404
     return render_template('detail_permohonan.html', permohonan=permohonan)
@@ -234,20 +337,14 @@ def detail_permohonan_page(id_permohonan):
 def setujui_permohonan(id_permohonan):
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    for item in data_permohonan:
-        if item['id'] == id_permohonan:
-            item['status'] = 'Disetujui'
-            break
+    update_status_permohonan(id_permohonan, 'Disetujui')
     return redirect(url_for('permohonan_masuk_page'))
 
 @app.route('/tolak/<int:id_permohonan>')
 def tolak_permohonan(id_permohonan):
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    for item in data_permohonan:
-        if item['id'] == id_permohonan:
-            item['status'] = 'Ditolak'
-            break
+    update_status_permohonan(id_permohonan, 'Ditolak')
     return redirect(url_for('permohonan_masuk_page'))
 
 @app.route('/master-sarana')
@@ -280,7 +377,7 @@ def laporan_page():
         return redirect(url_for('login_page'))
     jenis_filter = request.args.get('jenis', 'Semua Jenis')
     status_filter = request.args.get('status', 'Semua Status')
-    filtered_data = data_permohonan
+    filtered_data = get_all_permohonan()
     if jenis_filter != 'Semua Jenis':
         kategori_kunci = jenis_filter.split(' ')[0].lower() 
         filtered_data = [item for item in filtered_data if item.get('kategori', '').lower() == kategori_kunci]
@@ -298,14 +395,14 @@ def laporan_page():
 def export_laporan_drive():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    generate_and_upload_laporan_pdf(data_permohonan)
+    generate_and_upload_laporan_pdf(get_all_permohonan())
     return redirect(url_for('laporan_page'))
 
 @app.route('/pengguna')
 def pengguna_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('pengguna.html', data_pengguna=data_pengguna)
+    return render_template('pengguna.html', data_pengguna=get_all_pengguna())
 
 @app.route('/pengaturan')
 def pengaturan_page():
@@ -348,8 +445,6 @@ def proses_permohonan(kategori):
     handle_file_upload('foto')
     handle_file_upload('dokumen')
     permohonan_baru = {
-        'id': len(data_permohonan) + 1,
-        'kode_unik': f"REQ-{len(data_permohonan) + 1:03d}",
         'pemohon': session.get('nama', 'User'),
         'kategori': kategori,
         'jenis_sarana': request.form.get('jenis_sarana'),
@@ -380,7 +475,7 @@ def proses_permohonan(kategori):
         'foto': file_list,
         'foto_drive_ids': drive_ids
     }
-    data_permohonan.append(permohonan_baru)
+    add_permohonan(permohonan_baru)
     return redirect(url_for('riwayat_page'))
 
 @app.route('/riwayat')
@@ -388,7 +483,7 @@ def riwayat_page():
     if not session.get('user'):
         return redirect(url_for('login_page'))
     current_user = session.get('nama', 'User')
-    user_permohonan = [item for item in data_permohonan if item['pemohon'] == current_user]
+    user_permohonan = get_permohonan_by_pemohon(current_user)
     return render_template('riwayat.html', list_riwayat=user_permohonan)
 
 if __name__ == '__main__':
