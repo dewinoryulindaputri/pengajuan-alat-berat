@@ -71,17 +71,25 @@
                         </tr>
                     </thead>
                     <tbody class="small">
-                        <tr>
-                            <td>1</td>
-                            <td class="fw-bold">Genset 500 KVA</td>
-                            <td>Pembangkit Listrik Cadangan</td>
-                            <td><span class="badge badge-layak px-2 py-1">Normal</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm text-primary" title="Detail"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm text-warning" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                <button class="btn btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                        {% if list_peralatan %}
+                            {% for item in list_peralatan %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="fw-bold">{{ item.jenis_peralatan }}</td>
+                                <td>{{ item.catatan if item.catatan else '-' }}</td>
+                                <td><span class="badge badge-layak px-2 py-1">{{ item.status }}</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm text-primary" title="Detail"><i class="bi bi-eye"></i></button>
+                                    <button class="btn btn-sm text-warning" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                    <button class="btn btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Belum ada data peralatan yang terdaftar.</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

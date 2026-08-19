@@ -76,17 +76,25 @@
                         </tr>
                     </thead>
                     <tbody class="small">
-                        <tr>
-                            <td>1</td>
-                            <td class="fw-bold">Instalasi Pengolahan Air (IPA)</td>
-                            <td>50 Liter/detik</td>
-                            <td><span class="badge badge-layak px-2 py-1">Beroperasi</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm text-primary" title="Detail"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm text-warning" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                <button class="btn btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                        {% if list_instalasi %}
+                            {% for item in list_instalasi %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="fw-bold">{{ item.jenis_instalasi }}</td>
+                                <td>{{ item.kapasitas }}</td>
+                                <td><span class="badge badge-layak px-2 py-1">{{ item.status }}</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm text-primary" title="Detail"><i class="bi bi-eye"></i></button>
+                                    <button class="btn btn-sm text-warning" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                    <button class="btn btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Belum ada data instalasi yang terdaftar.</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

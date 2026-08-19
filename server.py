@@ -207,6 +207,77 @@ def get_all_permohonan():
     conn.close()
     return [_row_to_permohonan(r) for r in rows]
 
+def get_sarana_disetujui():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT * FROM permohonan WHERE kategori = 'sarana' AND status = 'Disetujui' ORDER BY id"
+    ).fetchall()
+    conn.close()
+    hasil = []
+    for r in rows:
+        d = dict(r)
+        hasil.append({
+            'id': d['id'],
+            'jenis_sarana': d['jenis_sarana'],
+            'no_lambung': d['no_lambung'],
+            'merk': d['merk'],
+            'tipe': d['tipe'],
+            'instansi': d['instansi'],
+            'status': 'Aktif'
+        })
+    return hasil
+
+def get_prasarana_disetujui():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT * FROM permohonan WHERE kategori = 'prasarana' AND status = 'Disetujui' ORDER BY id"
+    ).fetchall()
+    conn.close()
+    hasil = []
+    for r in rows:
+        d = dict(r)
+        hasil.append({
+            'id': d['id'],
+            'nama_prasarana': d['nama_prasarana'],
+            'lokasi': d['lokasi'],
+            'status': 'Layak'
+        })
+    return hasil
+
+def get_instalasi_disetujui():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT * FROM permohonan WHERE kategori = 'instalasi' AND status = 'Disetujui' ORDER BY id"
+    ).fetchall()
+    conn.close()
+    hasil = []
+    for r in rows:
+        d = dict(r)
+        hasil.append({
+            'id': d['id'],
+            'jenis_instalasi': d['jenis_instalasi'],
+            'kapasitas': d['kapasitas'],
+            'status': 'Beroperasi'
+        })
+    return hasil
+
+def get_peralatan_disetujui():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT * FROM permohonan WHERE kategori = 'peralatan' AND status = 'Disetujui' ORDER BY id"
+    ).fetchall()
+    conn.close()
+    hasil = []
+    for r in rows:
+        d = dict(r)
+        hasil.append({
+            'id': d['id'],
+            'jenis_peralatan': d['jenis_peralatan'],
+            'catatan': d['catatan'],
+            'status': 'Normal'
+        })
+    return hasil
+
 def get_permohonan_by_id(id_permohonan):
     conn = get_db_connection()
     row = conn.execute('SELECT * FROM permohonan WHERE id = ?', (id_permohonan,)).fetchone()
@@ -251,6 +322,19 @@ def update_status_permohonan(id_permohonan, status):
 init_db()
 
 data_sarana = [{'id': 1, 'jenis_sarana': 'Light Vehicle', 'no_lambung': 'DT-001', 'merk': 'Scania', 'tipe': 'P460', 'instansi': 'Departemen Tambang', 'status': 'Aktif'}]
+
+data_prasarana = [
+    {'id': 1, 'nama_prasarana': 'Gudang Logistik Utama', 'lokasi': 'Kawasan Industri Blok A', 'status': 'Layak'},
+    {'id': 2, 'nama_prasarana': 'Workshop Perbaikan Alat Berat', 'lokasi': 'Zona Tambang B', 'status': 'Layak'}
+]
+
+data_instalasi = [
+    {'id': 1, 'jenis_instalasi': 'Instalasi Pengolahan Air (IPA)', 'kapasitas': '50 Liter/detik', 'status': 'Beroperasi'}
+]
+
+data_peralatan = [
+    {'id': 1, 'jenis_peralatan': 'Genset 500 KVA', 'catatan': 'Pembangkit Listrik Cadangan', 'status': 'Normal'}
+]
 
 @app.route('/')
 def login_page():
@@ -358,25 +442,29 @@ def tolak_permohonan(id_permohonan):
 def master_sarana_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('master_sarana.html', list_sarana=data_sarana)
+    gabungan_sarana = data_sarana + get_sarana_disetujui()
+    return render_template('master_sarana.html', list_sarana=gabungan_sarana)
 
 @app.route('/master-prasarana')
 def master_prasarana_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('master_prasarana.html')
+    gabungan_prasarana = data_prasarana + get_prasarana_disetujui()
+    return render_template('master_prasarana.html', list_prasarana=gabungan_prasarana)
 
 @app.route('/master-instalasi')
 def master_instalasi_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('master_instalasi.html')
+    gabungan_instalasi = data_instalasi + get_instalasi_disetujui()
+    return render_template('master_instalasi.html', list_instalasi=gabungan_instalasi)
 
 @app.route('/master-peralatan')
 def master_peralatan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    return render_template('master_peralatan.html')
+    gabungan_peralatan = data_peralatan + get_peralatan_disetujui()
+    return render_template('master_peralatan.html', list_peralatan=gabungan_peralatan)
 
 @app.route('/laporan')
 def laporan_page():
