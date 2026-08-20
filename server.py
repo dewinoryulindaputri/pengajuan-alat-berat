@@ -192,6 +192,55 @@ def init_db():
             "INSERT INTO master_prasarana (nama_prasarana, lokasi, status, asal_permohonan_id) VALUES (?, ?, ?, ?)",
             ('Workshop Perbaikan Alat Berat', 'Zona Tambang B', 'Layak', None)
         )
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS master_sarana (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            jenis_sarana TEXT,
+            no_lambung TEXT,
+            merk TEXT,
+            tipe TEXT,
+            instansi TEXT,
+            status TEXT,
+            asal_permohonan_id INTEGER
+        )
+    ''')
+    if conn.execute('SELECT COUNT(*) FROM master_sarana').fetchone()[0] == 0:
+        conn.execute(
+            "INSERT INTO master_sarana (jenis_sarana, no_lambung, merk, tipe, instansi, status, asal_permohonan_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ('Light Vehicle', 'DT-001', 'Scania', 'P460', 'Departemen Tambang', 'Aktif', None)
+        )
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS master_instalasi (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            jenis_instalasi TEXT,
+            kapasitas TEXT,
+            status TEXT,
+            asal_permohonan_id INTEGER
+        )
+    ''')
+    if conn.execute('SELECT COUNT(*) FROM master_instalasi').fetchone()[0] == 0:
+        conn.execute(
+            "INSERT INTO master_instalasi (jenis_instalasi, kapasitas, status, asal_permohonan_id) VALUES (?, ?, ?, ?)",
+            ('Instalasi Pengolahan Air (IPA)', '50 Liter/detik', 'Beroperasi', None)
+        )
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS master_peralatan (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            jenis_peralatan TEXT,
+            catatan TEXT,
+            status TEXT,
+            asal_permohonan_id INTEGER
+        )
+    ''')
+    if conn.execute('SELECT COUNT(*) FROM master_peralatan').fetchone()[0] == 0:
+        conn.execute(
+            "INSERT INTO master_peralatan (jenis_peralatan, catatan, status, asal_permohonan_id) VALUES (?, ?, ?, ?)",
+            ('Genset 500 KVA', 'Pembangkit Listrik Cadangan', 'Normal', None)
+        )
+
     conn.commit()
     conn.close()
 
@@ -254,6 +303,132 @@ def update_master_prasarana(id_item, nama_prasarana, lokasi, status):
 def hapus_master_prasarana(id_item):
     conn = get_db_connection()
     conn.execute('DELETE FROM master_prasarana WHERE id = ?', (id_item,))
+    conn.commit()
+    conn.close()
+
+def get_all_master_sarana():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM master_sarana ORDER BY id').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_master_sarana_by_id(id_item):
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM master_sarana WHERE id = ?', (id_item,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def cek_master_sarana_dari_permohonan(id_permohonan):
+    conn = get_db_connection()
+    row = conn.execute('SELECT id FROM master_sarana WHERE asal_permohonan_id = ?', (id_permohonan,)).fetchone()
+    conn.close()
+    return row is not None
+
+def add_master_sarana(jenis_sarana, no_lambung, merk, tipe, instansi, status, asal_permohonan_id=None):
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO master_sarana (jenis_sarana, no_lambung, merk, tipe, instansi, status, asal_permohonan_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (jenis_sarana, no_lambung, merk, tipe, instansi, status, asal_permohonan_id)
+    )
+    conn.commit()
+    conn.close()
+
+def update_master_sarana(id_item, jenis_sarana, no_lambung, merk, tipe, instansi, status):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE master_sarana SET jenis_sarana = ?, no_lambung = ?, merk = ?, tipe = ?, instansi = ?, status = ? WHERE id = ?',
+        (jenis_sarana, no_lambung, merk, tipe, instansi, status, id_item)
+    )
+    conn.commit()
+    conn.close()
+
+def hapus_master_sarana(id_item):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM master_sarana WHERE id = ?', (id_item,))
+    conn.commit()
+    conn.close()
+
+def get_all_master_instalasi():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM master_instalasi ORDER BY id').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_master_instalasi_by_id(id_item):
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM master_instalasi WHERE id = ?', (id_item,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def cek_master_instalasi_dari_permohonan(id_permohonan):
+    conn = get_db_connection()
+    row = conn.execute('SELECT id FROM master_instalasi WHERE asal_permohonan_id = ?', (id_permohonan,)).fetchone()
+    conn.close()
+    return row is not None
+
+def add_master_instalasi(jenis_instalasi, kapasitas, status, asal_permohonan_id=None):
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO master_instalasi (jenis_instalasi, kapasitas, status, asal_permohonan_id) VALUES (?, ?, ?, ?)',
+        (jenis_instalasi, kapasitas, status, asal_permohonan_id)
+    )
+    conn.commit()
+    conn.close()
+
+def update_master_instalasi(id_item, jenis_instalasi, kapasitas, status):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE master_instalasi SET jenis_instalasi = ?, kapasitas = ?, status = ? WHERE id = ?',
+        (jenis_instalasi, kapasitas, status, id_item)
+    )
+    conn.commit()
+    conn.close()
+
+def hapus_master_instalasi(id_item):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM master_instalasi WHERE id = ?', (id_item,))
+    conn.commit()
+    conn.close()
+
+def get_all_master_peralatan():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM master_peralatan ORDER BY id').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_master_peralatan_by_id(id_item):
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM master_peralatan WHERE id = ?', (id_item,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def cek_master_peralatan_dari_permohonan(id_permohonan):
+    conn = get_db_connection()
+    row = conn.execute('SELECT id FROM master_peralatan WHERE asal_permohonan_id = ?', (id_permohonan,)).fetchone()
+    conn.close()
+    return row is not None
+
+def add_master_peralatan(jenis_peralatan, catatan, status, asal_permohonan_id=None):
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO master_peralatan (jenis_peralatan, catatan, status, asal_permohonan_id) VALUES (?, ?, ?, ?)',
+        (jenis_peralatan, catatan, status, asal_permohonan_id)
+    )
+    conn.commit()
+    conn.close()
+
+def update_master_peralatan(id_item, jenis_peralatan, catatan, status):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE master_peralatan SET jenis_peralatan = ?, catatan = ?, status = ? WHERE id = ?',
+        (jenis_peralatan, catatan, status, id_item)
+    )
+    conn.commit()
+    conn.close()
+
+def hapus_master_peralatan(id_item):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM master_peralatan WHERE id = ?', (id_item,))
     conn.commit()
     conn.close()
 
@@ -493,12 +668,41 @@ def setujui_permohonan(id_permohonan):
     update_status_permohonan(id_permohonan, 'Disetujui')
 
     permohonan = get_permohonan_by_id(id_permohonan)
-    if permohonan and permohonan.get('kategori') == 'prasarana':
-        if not cek_master_prasarana_dari_permohonan(id_permohonan):
+    if permohonan:
+        kategori = permohonan.get('kategori')
+
+        if kategori == 'prasarana' and not cek_master_prasarana_dari_permohonan(id_permohonan):
             add_master_prasarana(
                 permohonan.get('nama_prasarana'),
                 permohonan.get('lokasi'),
                 'Layak',
+                asal_permohonan_id=id_permohonan
+            )
+
+        elif kategori == 'sarana' and not cek_master_sarana_dari_permohonan(id_permohonan):
+            add_master_sarana(
+                permohonan.get('jenis_sarana'),
+                permohonan.get('no_lambung'),
+                permohonan.get('merk'),
+                permohonan.get('tipe'),
+                permohonan.get('instansi'),
+                'Aktif',
+                asal_permohonan_id=id_permohonan
+            )
+
+        elif kategori == 'instalasi' and not cek_master_instalasi_dari_permohonan(id_permohonan):
+            add_master_instalasi(
+                permohonan.get('jenis_instalasi'),
+                permohonan.get('kapasitas'),
+                'Beroperasi',
+                asal_permohonan_id=id_permohonan
+            )
+
+        elif kategori == 'peralatan' and not cek_master_peralatan_dari_permohonan(id_permohonan):
+            add_master_peralatan(
+                permohonan.get('jenis_peralatan'),
+                permohonan.get('catatan'),
+                'Normal',
                 asal_permohonan_id=id_permohonan
             )
 
@@ -515,8 +719,34 @@ def tolak_permohonan(id_permohonan):
 def master_sarana_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    gabungan_sarana = data_sarana + get_sarana_disetujui()
-    return render_template('master_sarana.html', list_sarana=gabungan_sarana)
+    return render_template('master_sarana.html', list_sarana=get_all_master_sarana())
+
+@app.route('/edit-sarana/<int:id_item>', methods=['GET', 'POST'])
+def edit_master_sarana_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    item = get_master_sarana_by_id(id_item)
+    if not item:
+        return "Data sarana tidak ditemukan", 404
+    if request.method == 'POST':
+        update_master_sarana(
+            id_item,
+            request.form.get('jenis_sarana'),
+            request.form.get('no_lambung'),
+            request.form.get('merk'),
+            request.form.get('tipe'),
+            request.form.get('instansi'),
+            request.form.get('status')
+        )
+        return redirect(url_for('master_sarana_page'))
+    return render_template('edit_master_sarana.html', item=item)
+
+@app.route('/hapus-sarana/<int:id_item>')
+def hapus_master_sarana_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    hapus_master_sarana(id_item)
+    return redirect(url_for('master_sarana_page'))
 
 @app.route('/master-prasarana')
 def master_prasarana_page():
@@ -552,15 +782,61 @@ def hapus_master_prasarana_page(id_item):
 def master_instalasi_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    gabungan_instalasi = data_instalasi + get_instalasi_disetujui()
-    return render_template('master_instalasi.html', list_instalasi=gabungan_instalasi)
+    return render_template('master_instalasi.html', list_instalasi=get_all_master_instalasi())
+
+@app.route('/master-instalasi/edit/<int:id_item>', methods=['GET', 'POST'])
+def edit_master_instalasi_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    item = get_master_instalasi_by_id(id_item)
+    if not item:
+        return "Data instalasi tidak ditemukan", 404
+    if request.method == 'POST':
+        update_master_instalasi(
+            id_item,
+            request.form.get('jenis_instalasi'),
+            request.form.get('kapasitas'),
+            request.form.get('status')
+        )
+        return redirect(url_for('master_instalasi_page'))
+    return render_template('edit_master_instalasi.html', item=item)
+
+@app.route('/master-instalasi/hapus/<int:id_item>')
+def hapus_master_instalasi_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    hapus_master_instalasi(id_item)
+    return redirect(url_for('master_instalasi_page'))
 
 @app.route('/master-peralatan')
 def master_peralatan_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    gabungan_peralatan = data_peralatan + get_peralatan_disetujui()
-    return render_template('master_peralatan.html', list_peralatan=gabungan_peralatan)
+    return render_template('master_peralatan.html', list_peralatan=get_all_master_peralatan())
+
+@app.route('/master-peralatan/edit/<int:id_item>', methods=['GET', 'POST'])
+def edit_master_peralatan_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    item = get_master_peralatan_by_id(id_item)
+    if not item:
+        return "Data peralatan tidak ditemukan", 404
+    if request.method == 'POST':
+        update_master_peralatan(
+            id_item,
+            request.form.get('jenis_peralatan'),
+            request.form.get('catatan'),
+            request.form.get('status')
+        )
+        return redirect(url_for('master_peralatan_page'))
+    return render_template('edit_master_peralatan.html', item=item)
+
+@app.route('/master-peralatan/hapus/<int:id_item>')
+def hapus_master_peralatan_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    hapus_master_peralatan(id_item)
+    return redirect(url_for('master_peralatan_page'))
 
 @app.route('/laporan')
 def laporan_page():
