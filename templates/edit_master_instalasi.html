@@ -50,26 +50,27 @@
             <a href="/master-instalasi" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Kembali</a>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 600px;">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 700px;">
             <form method="POST" action="/master-instalasi/edit/{{ item.id }}">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Nama Instalasi</label>
+                    <label class="form-label fw-bold">Jenis Instalasi</label>
                     <input type="text" name="jenis_instalasi" class="form-control" value="{{ item.jenis_instalasi }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Kapasitas</label>
-                    <input type="text" name="kapasitas" class="form-control" value="{{ item.kapasitas }}">
+                    <label class="form-label fw-bold">Kapasitas</label>
+                    <input type="text" name="kapasitas" class="form-control" value="{{ item.kapasitas }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Status</label>
+                    <label class="form-label fw-bold">Status</label>
                     <select name="status" class="form-select">
                         <option value="Beroperasi" {% if item.status == 'Beroperasi' %}selected{% endif %}>Beroperasi</option>
                         <option value="Tidak Beroperasi" {% if item.status == 'Tidak Beroperasi' %}selected{% endif %}>Tidak Beroperasi</option>
+                        <option value="Perbaikan" {% if item.status == 'Perbaikan' %}selected{% endif %}>Perbaikan</option>
                     </select>
                 </div>
-                <div class="text-end mt-4">
-                    <a href="/master-instalasi" class="btn btn-secondary btn-sm">Batal</a>
-                    <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">Simpan Perubahan</button>
+                <div class="d-flex gap-2 mt-4">
+                    <a href="/master-instalasi" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-success fw-bold">Simpan Perubahan</button>
                 </div>
             </form>
         </div>

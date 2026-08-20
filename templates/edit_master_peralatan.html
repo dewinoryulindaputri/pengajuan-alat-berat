@@ -45,31 +45,32 @@
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
             <div>
                 <h4 class="fw-bold mb-1 text-dark">Edit Data Peralatan</h4>
-                <p class="text-muted small mb-0">Perbarui informasi peralatan pendukung.</p>
+                <p class="text-muted small mb-0">Perbarui informasi peralatan.</p>
             </div>
             <a href="/master-peralatan" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Kembali</a>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 600px;">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 700px;">
             <form method="POST" action="/master-peralatan/edit/{{ item.id }}">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Nama Peralatan</label>
+                    <label class="form-label fw-bold">Jenis Peralatan</label>
                     <input type="text" name="jenis_peralatan" class="form-control" value="{{ item.jenis_peralatan }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Jenis / Keterangan</label>
-                    <input type="text" name="catatan" class="form-control" value="{{ item.catatan }}">
+                    <label class="form-label fw-bold">Catatan</label>
+                    <input type="text" name="catatan" class="form-control" value="{{ item.catatan or '' }}">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Status</label>
+                    <label class="form-label fw-bold">Status</label>
                     <select name="status" class="form-select">
                         <option value="Normal" {% if item.status == 'Normal' %}selected{% endif %}>Normal</option>
-                        <option value="Perlu Perbaikan" {% if item.status == 'Perlu Perbaikan' %}selected{% endif %}>Perlu Perbaikan</option>
+                        <option value="Rusak" {% if item.status == 'Rusak' %}selected{% endif %}>Rusak</option>
+                        <option value="Perbaikan" {% if item.status == 'Perbaikan' %}selected{% endif %}>Perbaikan</option>
                     </select>
                 </div>
-                <div class="text-end mt-4">
-                    <a href="/master-peralatan" class="btn btn-secondary btn-sm">Batal</a>
-                    <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">Simpan Perubahan</button>
+                <div class="d-flex gap-2 mt-4">
+                    <a href="/master-peralatan" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-success fw-bold">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
