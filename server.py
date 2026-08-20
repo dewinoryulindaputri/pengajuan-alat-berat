@@ -174,6 +174,24 @@ def init_db():
                      ('Super Administrator', 'admin@perizinan.com', 'Administrator'))
         conn.execute("INSERT INTO pengguna (nama, email, role) VALUES (?, ?, ?)",
                      ('Petugas Verifikasi', 'petugas@perizinan.com', 'Petugas'))
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS master_prasarana (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama_prasarana TEXT,
+            lokasi TEXT,
+            status TEXT,
+            asal_permohonan_id INTEGER
+        )
+    ''')
+    if conn.execute('SELECT COUNT(*) FROM master_prasarana').fetchone()[0] == 0:
+        conn.execute(
+            "INSERT INTO master_prasarana (nama_prasarana, lokasi, status, asal_permohonan_id) VALUES (?, ?, ?, ?)",
+            ('Gudang Logistik Utama', 'Kawasan Industri Blok A', 'Layak', None)
+        )
+        conn.execute(
+            "INSERT INTO master_prasarana (nama_prasarana, lokasi, status, asal_permohonan_id) VALUES (?, ?, ?, ?)",
+            ('Workshop Perbaikan Alat Berat', 'Zona Tambang B', 'Layak', None)
+        )
     conn.commit()
     conn.close()
 
@@ -192,6 +210,50 @@ def cek_pengguna_ada(nama):
 def add_pengguna(nama, email, role):
     conn = get_db_connection()
     conn.execute('INSERT INTO pengguna (nama, email, role) VALUES (?, ?, ?)', (nama, email, role))
+    conn.commit()
+    conn.close()
+
+def get_all_master_prasarana():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM master_prasarana ORDER BY id').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_master_prasarana_by_id(id_item):
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM master_prasarana WHERE id = ?', (id_item,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def cek_master_prasarana_dari_permohonan(id_permohonan):
+    conn = get_db_connection()
+    row = conn.execute(
+        'SELECT id FROM master_prasarana WHERE asal_permohonan_id = ?', (id_permohonan,)
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+def add_master_prasarana(nama_prasarana, lokasi, status, asal_permohonan_id=None):
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO master_prasarana (nama_prasarana, lokasi, status, asal_permohonan_id) VALUES (?, ?, ?, ?)',
+        (nama_prasarana, lokasi, status, asal_permohonan_id)
+    )
+    conn.commit()
+    conn.close()
+
+def update_master_prasarana(id_item, nama_prasarana, lokasi, status):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE master_prasarana SET nama_prasarana = ?, lokasi = ?, status = ? WHERE id = ?',
+        (nama_prasarana, lokasi, status, id_item)
+    )
+    conn.commit()
+    conn.close()
+
+def hapus_master_prasarana(id_item):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM master_prasarana WHERE id = ?', (id_item,))
     conn.commit()
     conn.close()
 
@@ -429,6 +491,17 @@ def setujui_permohonan(id_permohonan):
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
     update_status_permohonan(id_permohonan, 'Disetujui')
+
+    permohonan = get_permohonan_by_id(id_permohonan)
+    if permohonan and permohonan.get('kategori') == 'prasarana':
+        if not cek_master_prasarana_dari_permohonan(id_permohonan):
+            add_master_prasarana(
+                permohonan.get('nama_prasarana'),
+                permohonan.get('lokasi'),
+                'Layak',
+                asal_permohonan_id=id_permohonan
+            )
+
     return redirect(url_for('permohonan_masuk_page'))
 
 @app.route('/tolak/<int:id_permohonan>')
@@ -449,8 +522,31 @@ def master_sarana_page():
 def master_prasarana_page():
     if session.get('user') != 'admin':
         return redirect(url_for('login_page'))
-    gabungan_prasarana = data_prasarana + get_prasarana_disetujui()
-    return render_template('master_prasarana.html', list_prasarana=gabungan_prasarana)
+    return render_template('master_prasarana.html', list_prasarana=get_all_master_prasarana())
+
+@app.route('/master-prasarana/edit/<int:id_item>', methods=['GET', 'POST'])
+def edit_master_prasarana_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    item = get_master_prasarana_by_id(id_item)
+    if not item:
+        return "Data prasarana tidak ditemukan", 404
+    if request.method == 'POST':
+        update_master_prasarana(
+            id_item,
+            request.form.get('nama_prasarana'),
+            request.form.get('lokasi'),
+            request.form.get('status')
+        )
+        return redirect(url_for('master_prasarana_page'))
+    return render_template('edit_master_prasarana.html', item=item)
+
+@app.route('/master-prasarana/hapus/<int:id_item>')
+def hapus_master_prasarana_page(id_item):
+    if session.get('user') != 'admin':
+        return redirect(url_for('login_page'))
+    hapus_master_prasarana(id_item)
+    return redirect(url_for('master_prasarana_page'))
 
 @app.route('/master-instalasi')
 def master_instalasi_page():
